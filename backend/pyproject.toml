@@ -10,6 +10,10 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "alembic>=1.13",
     "pydantic-settings>=2.6",
+    "google-auth>=2.35",
+    "requests>=2.32",
+    "pyjwt>=2.9",
+    "uuid6>=2024.7.10",
 ]
 
 [dependency-groups]

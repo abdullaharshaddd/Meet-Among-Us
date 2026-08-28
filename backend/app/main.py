@@ -1,11 +1,23 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.exceptions import AppError
+from app.routers.auth import router as auth_router
 from app.schemas.health import HealthResponse
 
 app = FastAPI(title="AI Meeting Intelligence Agent")
+app.include_router(auth_router)
+
+
+@app.exception_handler(AppError)
+def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    # Single translation point from typed domain exceptions to HTTP — see
+    # CLAUDE.md's "Errors: raise typed domain exceptions, translate to HTTP in one
+    # exception handler." Routers and services never build an HTTPException by hand.
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 @app.get("/health", response_model=HealthResponse)
