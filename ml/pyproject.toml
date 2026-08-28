@@ -1,0 +1,16 @@
+[project]
+name = "meet-among-us-ml"
+version = "0.1.0"
+description = "AI Meeting Intelligence Agent — speaker embedding / audio ML package"
+requires-python = ">=3.11"
+# Deliberately empty. torch + speechbrain are a ~2GB install that only Phase 4a
+# needs — a shared uv workspace with /backend would pull them into the API's
+# environment too, which is the exact thing keeping this package separate is for.
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ml"]

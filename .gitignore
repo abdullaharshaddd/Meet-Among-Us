@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+web-build/
+android/
+ios/
+
+# Env
+.env
+.env.local
+*.env.local
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Editor / tool cache
+.impeccable/
