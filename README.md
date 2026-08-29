@@ -1,7 +1,7 @@
 # AI Meeting Intelligence Agent
 
 Bilingual (English–Urdu) meeting intelligence for in-person, multi-speaker meetings. Final-year
-project. See `CLAUDE.md` for working rules, `docs/PROJECT_BRIEF.md` for the full project
+project. See `docs/PROJECT_BRIEF.md` for the full project
 context, and `docs/DATA_MODEL.md` for the schema contract.
 
 ## Layout
