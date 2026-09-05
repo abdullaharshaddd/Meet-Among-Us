@@ -139,7 +139,7 @@ These are different concepts and the earlier spec conflated them. Never use "Gue
 
 ## 6. Design system
 
-Dark mode only. Canvas `#0D1117`, accent teal `#14B8A6`. General Sans or Satoshi for display, IBM Plex Mono for numerics and timestamps, Noto Nastaliq Urdu for RTL Urdu segments.
+Dark mode only. Canvas `#0D1117`, accent teal `#14B8A6`. IBM Plex Sans for UI text, IBM Plex Mono for numerics and timestamps, Noto Nastaliq Urdu for RTL Urdu segments — see `docs/adr/0005-ibm-plex-typeface.md` for why this replaced the original General Sans/Satoshi choice. Full tokens, and the shared component set (Button, TextField, Card, Avatar, Badge, states, and the signature `AudioLevelMeter`), live in `mobile/src/theme/` and `mobile/src/components/`.
 
 ---
 

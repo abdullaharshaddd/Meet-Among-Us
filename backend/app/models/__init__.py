@@ -9,4 +9,5 @@ class Base(DeclarativeBase):
 # `from app.models import Base` in alembic/env.py registers every table on
 # Base.metadata for autogenerate — importing a model module for its side effect only.
 from app.models.user import User  # noqa: E402,F401
+from app.models.refresh_token import RefreshToken  # noqa: E402,F401
 

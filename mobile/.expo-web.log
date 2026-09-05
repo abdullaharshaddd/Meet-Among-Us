@@ -1,0 +1,30 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB
+Starting project at D:\FYP\MeetAmongUs\mobile
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Starting Metro Bundler
+
+Waiting on http://localhost:8081
+
+An update for expo is available: 57.0.17 → ~57.0.18
+2 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+λ Bundled 10285ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1411 modules)
+Web Bundled 13230ms node_modules\expo-router\entry.js (1377 modules)
+λ Bundled 215ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1 module)
+Web Bundled 1719ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 4942ms node_modules\expo-router\entry.js (1374 modules)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+λ Bundled 200ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1 module)
+Web Bundled 1570ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 193ms node_modules\expo-router\entry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.

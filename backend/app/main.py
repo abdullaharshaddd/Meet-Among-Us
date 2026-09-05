@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -9,6 +10,19 @@ from app.routers.auth import router as auth_router
 from app.schemas.health import HealthResponse
 
 app = FastAPI(title="AI Meeting Intelligence Agent")
+
+# Expo web runs on a different origin (localhost:8081) than the API
+# (localhost:8001), so the browser blocks the request without this.
+# allow_origins=["*"] is dev-only — tighten to the real mobile/web origin(s)
+# before shipping.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth_router)
 
 
