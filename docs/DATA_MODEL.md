@@ -22,6 +22,20 @@ Conventions: UUIDv7 primary keys, `timestamptz` in UTC, `snake_case`, soft-delet
 
 Soft gate: users with `enrollment_status != 'complete'` can browse everything but cannot join a meeting.
 
+### `refresh_tokens`
+One row per issued refresh token. Needed so a stolen/replayed refresh token can be detected and
+revoked — a stateless JWT alone can't be revoked before it expires. See
+docs/adr/0010-refresh-token-rotation.md.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK — also embedded in the JWT as its `jti` claim |
+| `user_id` | uuid | FK → users |
+| `family_id` | uuid | shared by every token in one rotation chain; a fresh login starts a new chain (its own `id` becomes the family root) |
+| `revoked_at` | timestamptz | nullable — set when rotated away or when reuse is detected |
+| `expires_at` | timestamptz | mirrors the JWT's own `exp`; kept for a future cleanup job, not re-checked at refresh time since `jwt.decode` already enforces it |
+| `created_at` | timestamptz | |
+
 ### `voiceprints`
 Keyed by **user, not project** — one voiceprint reused across every workspace and meeting.
 

@@ -1,12 +1,15 @@
+from uuid import UUID
+
+import jwt
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 from sqlalchemy.orm import Session
 
 from app.core import security
 from app.core.config import settings
-from app.core.exceptions import InvalidCredentialsError
+from app.core.exceptions import EmailAlreadyExistsError, InvalidCredentialsError
 from app.models.user import User
-from app.repositories import user_repository
+from app.repositories import refresh_token_repository, user_repository
 
 
 def verify_google_id_token(token: str) -> dict:
@@ -63,6 +66,100 @@ def sign_in_with_google(db: Session, token: str) -> tuple[User, bool]:
     return user, True
 
 
-def issue_tokens(user: User) -> tuple[str, str]:
-    """Returns (access_token, refresh_token)."""
-    return security.create_access_token(user.id), security.create_refresh_token(user.id)
+def sign_up_with_password(db: Session, *, email: str, password: str, display_name: str) -> User:
+    if user_repository.get_by_email(db, email) is not None:
+        raise EmailAlreadyExistsError(f"An account with email {email} already exists")
+
+    return user_repository.create_password_user(
+        db,
+        email=email,
+        password_hash=security.hash_password(password),
+        display_name=display_name,
+    )
+
+
+def sign_in_with_password(db: Session, *, email: str, password: str) -> User:
+    user = user_repository.get_by_email(db, email)
+    # Same error either way (unknown email vs. wrong password) — never confirm
+    # whether an email is registered. password_hash is None for Google-only
+    # accounts; verify_password would just fail to split it, so check explicitly.
+    if user is None or user.password_hash is None:
+        raise InvalidCredentialsError("Incorrect email or password")
+    if not security.verify_password(password, user.password_hash):
+        raise InvalidCredentialsError("Incorrect email or password")
+    return user
+
+
+def issue_tokens(db: Session, user: User) -> tuple[str, str]:
+    """Returns (access_token, refresh_token). Always starts a fresh rotation
+    family (see ADR-0010) — a login/signup is never a continuation of some
+    other session's chain."""
+    refresh_row = refresh_token_repository.create(db, user_id=user.id)
+    return security.create_access_token(user.id), security.create_refresh_token(
+        user.id, jti=refresh_row.id
+    )
+
+
+def refresh_access_token(db: Session, token: str) -> tuple[str, str, User]:
+    """Validates, rotates, and returns a new (access_token, refresh_token, user).
+
+    Raises InvalidCredentialsError for anything wrong with the token — expired,
+    malformed, wrong type, unknown, or already-used. A replayed (already-revoked)
+    token additionally kills its whole rotation family — see ADR-0010.
+    """
+    try:
+        claims = security.decode_token(token)
+    except jwt.PyJWTError as exc:
+        raise InvalidCredentialsError("Invalid or expired refresh token") from exc
+
+    if claims.get("type") != security.TokenType.REFRESH.value:
+        raise InvalidCredentialsError("Not a refresh token")
+
+    try:
+        jti = UUID(claims["jti"])
+    except (KeyError, ValueError):
+        raise InvalidCredentialsError("Malformed refresh token") from None
+
+    row = refresh_token_repository.get_by_id(db, jti)
+    if row is None:
+        raise InvalidCredentialsError("Unknown refresh token")
+
+    if row.revoked_at is not None:
+        refresh_token_repository.revoke_family(db, row.family_id)
+        raise InvalidCredentialsError("Refresh token already used")
+
+    refresh_token_repository.revoke(db, row)
+    new_row = refresh_token_repository.create(db, user_id=row.user_id, family_id=row.family_id)
+
+    user = user_repository.get_by_id(db, row.user_id)
+    if user is None:
+        raise InvalidCredentialsError("User no longer exists")
+
+    return (
+        security.create_access_token(user.id),
+        security.create_refresh_token(user.id, jti=new_row.id),
+        user,
+    )
+
+
+def logout(db: Session, token: str) -> None:
+    """Revokes the token's whole rotation family so it can't be replayed after
+    logout. Best-effort and silent on anything wrong with the token (expired,
+    malformed, unknown, already revoked) — from the caller's side, logging out
+    should never fail; the client clears its local session either way."""
+    try:
+        claims = security.decode_token(token)
+    except jwt.PyJWTError:
+        return
+
+    if claims.get("type") != security.TokenType.REFRESH.value:
+        return
+
+    try:
+        jti = UUID(claims["jti"])
+    except (KeyError, ValueError):
+        return
+
+    row = refresh_token_repository.get_by_id(db, jti)
+    if row is not None:
+        refresh_token_repository.revoke_family(db, row.family_id)

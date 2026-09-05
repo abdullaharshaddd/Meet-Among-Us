@@ -63,7 +63,7 @@ These are different concepts. Never use "Guest N" for an unmatched segment.
 **Mobile**
 - Expo Router (file-based). TanStack Query for all server state. Zustand for local UI state only.
 - No `any`. No inline hex colours — use the token file.
-- Design system: dark mode, canvas `#0D1117`, accent teal `#14B8A6`, General Sans (display), IBM Plex Mono (numerics/timestamps), Noto Nastaliq Urdu (RTL segments).
+- Design system: dark mode, canvas `#0D1117`, accent teal `#14B8A6`, IBM Plex Sans (UI text — see ADR-0005), IBM Plex Mono (numerics/timestamps), Noto Nastaliq Urdu (RTL segments). Full token set in `mobile/src/theme/tokens.ts`.
 
 **Shared types**
 - Backend Pydantic models are the source of truth. Generate the OpenAPI spec, then generate TypeScript types into `/mobile/src/api/types.gen.ts`. Never hand-write a type that mirrors a backend model.

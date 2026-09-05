@@ -1,7 +1,13 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.user import EnrollmentStatus, User
+
+
+def get_by_id(db: Session, user_id: UUID) -> User | None:
+    return db.get(User, user_id)
 
 
 def get_by_google_sub(db: Session, google_sub: str) -> User | None:
@@ -21,6 +27,23 @@ def create_google_user(
         display_name=display_name,
         avatar_url=avatar_url,
         password_hash=None,
+        enrollment_status=EnrollmentStatus.NOT_STARTED,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def create_password_user(
+    db: Session, *, email: str, password_hash: str, display_name: str
+) -> User:
+    user = User(
+        email=email,
+        password_hash=password_hash,
+        display_name=display_name,
+        google_sub=None,
+        avatar_url=None,
         enrollment_status=EnrollmentStatus.NOT_STARTED,
     )
     db.add(user)

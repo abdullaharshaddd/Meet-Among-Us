@@ -5,9 +5,18 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.core import rate_limit
 from app.core.db import get_db
 from app.main import app
 from app.models import Base
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limits() -> None:
+    # TestClient reuses the same synthetic client IP for every test, so
+    # without this, an earlier test's login/signup attempts would count
+    # against a later test's rate-limit budget.
+    rate_limit.reset()
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 # No Docker/testcontainers this phase — engine is created lazily so importing this
