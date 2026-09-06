@@ -52,6 +52,13 @@ def create_password_user(
     return user
 
 
+def set_enrollment_status(db: Session, user: User, status: EnrollmentStatus) -> User:
+    user.enrollment_status = status
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def link_google_sub(db: Session, user: User, google_sub: str) -> User:
     """A user who previously signed up with email/password now signs in with Google
     using the same email — attach the Google identity instead of violating the

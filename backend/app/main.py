@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.exceptions import AppError
 from app.routers.auth import router as auth_router
+from app.routers.enrollment import router as enrollment_router
 from app.schemas.health import HealthResponse
 
 app = FastAPI(title="AI Meeting Intelligence Agent")
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(enrollment_router)
 
 
 @app.exception_handler(AppError)

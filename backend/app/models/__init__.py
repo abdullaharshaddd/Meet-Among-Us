@@ -10,4 +10,6 @@ class Base(DeclarativeBase):
 # Base.metadata for autogenerate — importing a model module for its side effect only.
 from app.models.user import User  # noqa: E402,F401
 from app.models.refresh_token import RefreshToken  # noqa: E402,F401
+from app.models.voiceprint import Voiceprint  # noqa: E402,F401
+from app.models.enrollment_sample import EnrollmentSample  # noqa: E402,F401
 

@@ -2,7 +2,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from app.core import rate_limit
@@ -28,6 +28,11 @@ _engine = create_engine(TEST_DATABASE_URL) if TEST_DATABASE_URL else None
 def db() -> Session:
     if _engine is None:
         pytest.skip("TEST_DATABASE_URL not set — see backend/.env.example")
+    # voiceprints/enrollment_samples use pgvector's `vector` column type —
+    # create_all fails against a fresh test DB without this. IF NOT EXISTS
+    # makes re-running it every test cheap and harmless.
+    with _engine.begin() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(_engine)
     connection = _engine.connect()
     transaction = connection.begin()

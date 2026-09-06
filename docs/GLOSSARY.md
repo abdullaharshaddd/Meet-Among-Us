@@ -72,3 +72,23 @@ Plain-English definitions, added the first time each term is used in code.
   actual on-screen drawing on another. Animation code that only touches the UI thread (as
   Reanimated's `useFrameCallback`/`useAnimatedStyle` do) keeps running smoothly even if the JS
   thread is busy or the component isn't re-rendering at all.
+- **VAD (voice activity detection)** — automatically finding which stretches of an audio clip
+  are someone speaking, as opposed to silence or background noise.
+- **Speaker embedding** — a fixed-length list of numbers a neural network produces from a
+  speech clip, positioned so that clips from the same person land close together and clips
+  from different people land far apart.
+- **ECAPA-TDNN** — the neural network (and, here, the specific pretrained model) used to
+  produce speaker embeddings — trained on VoxCeleb, a large but overwhelmingly English dataset.
+- **Cosine similarity** — how alike two vectors' directions are, ignoring their length: 1.0
+  means pointing the same way, 0 means unrelated, -1.0 means opposite. Used here to compare
+  speaker embeddings.
+- **L2 normalisation** — rescaling a vector so its length becomes exactly 1, leaving only its
+  direction. Done to embeddings before averaging or comparing them, since only direction is
+  meant to carry speaker identity, not magnitude.
+- **Centroid** — the average position of a set of points — here, the average of a user's three
+  enrollment-passage embeddings, used as their one reference voiceprint.
+- **SNR (signal-to-noise ratio)** — how much louder the wanted signal (speech) is than the
+  unwanted background noise, in decibels. Higher means cleaner audio.
+- **Equal error rate (EER)** — a single number summarizing a verification system's accuracy:
+  the error rate at the one threshold where wrongly accepting an impostor and wrongly
+  rejecting the real person happen equally often. Lower is better.
