@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import AppError
 from app.routers.auth import router as auth_router
@@ -26,6 +27,15 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(enrollment_router)
+
+if settings.dev_tools_enabled:
+    # /dev/enroll only exists on a developer's own machine — see
+    # docs/adr/0015-dev-enrollment-harness.md. The import lives inside this
+    # branch, not just the mount, so a prod deploy that leaves the flag unset
+    # never defines these routes at all, rather than merely hiding them.
+    from app.routers.dev_enroll import router as dev_enroll_router
+
+    app.include_router(dev_enroll_router)
 
 
 @app.exception_handler(AppError)

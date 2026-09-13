@@ -20,7 +20,7 @@ router = APIRouter(prefix="/enrollment", tags=["enrollment"])
 def create_upload_url(
     payload: UploadUrlRequest, user: User = Depends(get_current_user)
 ) -> UploadUrlResponse:
-    return enrollment_service.create_upload_url(user, payload.language)
+    return enrollment_service.create_upload_url(user, payload.language, payload.audio_format)
 
 
 @router.post("/samples", response_model=SubmitSampleResponse)

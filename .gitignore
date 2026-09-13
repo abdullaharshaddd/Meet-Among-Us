@@ -18,6 +18,11 @@ ios/
 .env.local
 *.env.local
 
+# Self-signed certs for the /dev/enroll harness (docs/adr/0015) — generated
+# locally, per-machine, short-lived. Never commit a private key.
+backend/*.pem
+backend/*.key
+
 # OS
 Thumbs.db
 .DS_Store

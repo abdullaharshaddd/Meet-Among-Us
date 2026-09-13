@@ -31,6 +31,11 @@ from app.schemas.enrollment import (
 MODEL_VERSION = "ecapa-voxceleb-v1"
 UPLOAD_URL_EXPIRES_IN_SECONDS = 900
 
+# audio_format -> R2 Content-Type. A presigned PUT that specifies ContentType binds
+# it into the signature (a well-known S3/R2 gotcha), so the caller's declared format
+# must match the bytes it actually uploads or R2 rejects the PUT outright.
+_CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav"}
+
 # A passage rejected this many times in a row, with no acceptance since, flips
 # enrollment_status to 'failed' — a UX signal to stop retrying blindly and show
 # help text, not a hard stop (any later acceptance clears it). Counted from
@@ -55,12 +60,17 @@ def _reason_message(reason_code: str, speech_duration_sec: float) -> str:
     return REJECTION_MESSAGES[reason_code].format(speech_duration_sec=speech_duration_sec)
 
 
-def create_upload_url(user: User, language: EnrollmentLanguage) -> UploadUrlResponse:
+def create_upload_url(
+    user: User, language: EnrollmentLanguage, audio_format: str = "flac"
+) -> UploadUrlResponse:
     # FLAC per CLAUDE.md's locked "record WAV, upload FLAC" decision — the mobile
-    # client transcodes before this URL ever gets used.
-    audio_key = f"enrollment/{user.id}/{language.value}/{uuid4()}.flac"
+    # client transcodes before this URL ever gets used. "wav" is the /dev/enroll
+    # harness only — see UploadUrlRequest.audio_format.
+    audio_key = f"enrollment/{user.id}/{language.value}/{uuid4()}.{audio_format}"
     upload_url = storage.presign_put(
-        audio_key, content_type="audio/flac", expires_in=UPLOAD_URL_EXPIRES_IN_SECONDS
+        audio_key,
+        content_type=_CONTENT_TYPES[audio_format],
+        expires_in=UPLOAD_URL_EXPIRES_IN_SECONDS,
     )
     return UploadUrlResponse(
         upload_url=upload_url, audio_key=audio_key, expires_in_seconds=UPLOAD_URL_EXPIRES_IN_SECONDS

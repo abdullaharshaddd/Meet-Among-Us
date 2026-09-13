@@ -45,5 +45,12 @@ class Settings(BaseSettings):
     # copy runs on the same port, so there's nothing to fill in per-environment.
     ml_service_url: str = "http://localhost:8500"
 
+    # Gates the /dev/enroll browser test harness — see
+    # docs/adr/0015-dev-enrollment-harness.md. Defaults off; app/main.py only
+    # imports and mounts that router when this is true, so a prod deployment
+    # that never sets it has no enrollment-harness route to hit at all, not
+    # just one hidden behind a runtime check.
+    dev_tools_enabled: bool = False
+
 
 settings = Settings()  # type: ignore[call-arg]  # values come from .env, not literals

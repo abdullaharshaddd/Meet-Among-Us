@@ -92,3 +92,8 @@ Plain-English definitions, added the first time each term is used in code.
 - **Equal error rate (EER)** — a single number summarizing a verification system's accuracy:
   the error rate at the one threshold where wrongly accepting an impostor and wrongly
   rejecting the real person happen equally often. Lower is better.
+- **Secure context** — a browser security requirement that microphone/camera access (and a
+  few other sensitive APIs) only works on pages loaded over HTTPS, or from `localhost`. A page
+  loaded over plain HTTP from a LAN IP (e.g. `http://192.168.1.5:8001`) does not qualify, even
+  on a private network — this is why the dev enrollment harness needs a self-signed TLS
+  certificate to be usable from a phone. See docs/adr/0015-dev-enrollment-harness.md.

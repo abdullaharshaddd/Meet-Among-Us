@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Enrollment Dev Harness</title>
+<!-- Noto Nastaliq Urdu — same family the mobile app bundles (see mobile/src/theme/fonts.ts).
+     Loaded from Google Fonts here since this page has no bundler; falls back to whatever
+     Urdu-capable font the OS ships if the network blocks it. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --border: #ccc;
+    --bg: #fff;
+    --bg-alt: #f4f4f4;
+    --text: #111;
+    --muted: #666;
+    --accept: #1a7f37;
+    --reject: #b42318;
+    --warn: #92400e;
+    --accent: #1d4ed8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 12px 16px 48px;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+  h1 { font-size: 1.25rem; margin-bottom: 4px; }
+  h2 { font-size: 1rem; margin: 0 0 8px; }
+  .banner {
+    background: #fff3cd;
+    border: 1px solid #d9a441;
+    color: var(--warn);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+  .banner.error { background: #fde8e6; border-color: var(--reject); color: var(--reject); }
+  nav.tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+  nav.tabs button {
+    background: none; border: 1px solid transparent; border-bottom: none;
+    padding: 8px 14px; cursor: pointer; font-size: 0.9rem; color: var(--muted);
+  }
+  nav.tabs button.active { border-color: var(--border); background: var(--bg); color: var(--text); font-weight: 600; }
+  section[hidden] { display: none !important; }
+  fieldset { border: 1px solid var(--border); margin-bottom: 12px; padding: 12px; }
+  legend { padding: 0 4px; font-size: 0.85rem; color: var(--muted); }
+  label { display: block; font-size: 0.85rem; margin-top: 8px; }
+  input[type=text], input[type=email], input[type=password] {
+    width: 100%; padding: 6px 8px; margin-top: 2px; border: 1px solid var(--border); font-size: 0.9rem;
+  }
+  button {
+    padding: 6px 12px; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-alt);
+    cursor: pointer; margin-top: 8px; margin-right: 6px;
+  }
+  button:hover:not(:disabled) { background: #e8e8e8; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.danger { border-color: var(--reject); color: var(--reject); background: #fff; }
+  .card {
+    border: 1px solid var(--border); padding: 12px; margin-bottom: 12px; background: var(--bg);
+  }
+  .card h3 { margin: 0 0 6px; font-size: 0.95rem; }
+  .passage-text {
+    background: var(--bg-alt); padding: 10px; font-size: 1rem; line-height: 1.5; margin-bottom: 8px;
+  }
+  .passage-text.urdu {
+    font-family: "Noto Nastaliq Urdu", "Noto Nastaliq", serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 2.1; /* Nastaliq's ascenders/descenders clip under a Latin line-height */
+    font-size: 1.3rem;
+  }
+  .meter-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  .meter { flex: 1; height: 10px; background: var(--bg-alt); border: 1px solid var(--border); position: relative; }
+  .meter-fill { height: 100%; width: 0%; background: var(--accept); }
+  .timer { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--muted); min-width: 4em; }
+  .result { margin-top: 8px; padding: 8px; font-size: 0.85rem; }
+  .result.accepted { background: #eaf7ee; color: var(--accept); border: 1px solid var(--accept); }
+  .result.rejected { background: #fde8e6; color: var(--reject); border: 1px solid var(--reject); }
+  .result .measurements { color: var(--text); margin-top: 4px; font-size: 0.8rem; }
+  .status-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    border: 1px solid var(--border); padding: 8px 12px; margin-bottom: 16px; font-size: 0.85rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 600; }
+  .badge.not_attempted { background: #eee; color: var(--muted); }
+  .badge.accepted { background: #eaf7ee; color: var(--accept); }
+  .badge.rejected { background: #fde8e6; color: var(--reject); }
+  .badge.complete { background: #eaf7ee; color: var(--accept); }
+  .badge.in_progress { background: #fff3cd; color: var(--warn); }
+  .badge.failed { background: #fde8e6; color: var(--reject); }
+  .badge.not_started { background: #eee; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+  th { background: var(--bg-alt); }
+  .diagnostics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 0.85rem; }
+  .diagnostics-grid dt { color: var(--muted); }
+  .diagnostics-grid dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .flag-bad { color: var(--reject); font-weight: 600; }
+  .flag-ok { color: var(--accept); }
+  audio { width: 100%; margin-top: 6px; }
+  small.hint { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Enrollment Dev Harness</h1>
+<div class="banner">Dev tool only — never deployed, never reachable unless <code>DEV_TOOLS_ENABLED=true</code>. See <code>docs/adr/0015-dev-enrollment-harness.md</code>.</div>
+<div id="insecure-context-banner" class="banner error" hidden>
+  This page was loaded over plain HTTP from a non-localhost address. Browsers only allow
+  microphone access from a <strong>secure context</strong> (HTTPS, or localhost) — recording
+  will fail here. Ask whoever is running the backend to serve it over HTTPS with a self-signed
+  certificate (see the harness's run instructions), then reload this page via the
+  <code>https://</code> URL.
+</div>
+
+<nav class="tabs">
+  <button data-tab="enroll" class="active">Enroll</button>
+  <button data-tab="admin">Admin: all users</button>
+</nav>
+
+<section id="tab-enroll">
+
+  <div id="auth-panel">
+    <fieldset>
+      <legend>Sign up</legend>
+      <form id="signup-form">
+        <label>Display name <input type="text" name="display_name" required minlength="2"></label>
+        <label>Email <input type="email" name="email" required></label>
+        <label>Password <input type="password" name="password" required minlength="8"></label>
+        <button type="submit" class="primary">Sign up</button>
+      </form>
+    </fieldset>
+    <fieldset>
+      <legend>Log in</legend>
+      <form id="login-form">
+        <label>Email <input type="email" name="email" required></label>
+        <label>Password <input type="password" name="password" required></label>
+        <button type="submit" class="primary">Log in</button>
+      </form>
+    </fieldset>
+    <div id="auth-error" class="banner error" hidden></div>
+  </div>
+
+  <div id="enroll-panel" hidden>
+    <div class="status-bar">
+      <div>
+        Signed in as <strong id="whoami"></strong> —
+        enrollment: <span id="status-badge" class="badge"></span>
+        (<span id="progress-text"></span>)
+      </div>
+      <div>
+        <button id="logout-btn">Log out</button>
+        <button id="reset-btn" class="danger">Reset enrollment</button>
+      </div>
+    </div>
+    <div id="passages"></div>
+    <div id="diagnostics-panel" class="card" hidden>
+      <h2>Diagnostics</h2>
+      <dl class="diagnostics-grid" id="diagnostics-grid"></dl>
+      <small class="hint">Centroid L2 norm should read 1.0000 — anything else means normalisation
+        broke and every cosine similarity computed against it downstream is silently wrong.</small>
+    </div>
+  </div>
+
+</section>
+
+<section id="tab-admin" hidden>
+  <p><button id="refresh-admin">Refresh</button></p>
+  <table>
+    <thead>
+      <tr><th>Email</th><th>Name</th><th>Status</th><th>Accepted / total samples</th><th>Variance</th><th>Centroid norm</th></tr>
+    </thead>
+    <tbody id="admin-tbody"></tbody>
+  </table>
+</section>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------
+// Passages — copied verbatim from docs/ENROLLMENT_PASSAGES.md. Kept as plain
+// constants rather than fetched from the backend: nothing else in the app
+// serves this markdown file, and duplicating three short strings is cheaper
+// than building a doc-to-API pipeline for a tool that must not ship anyway.
+// ---------------------------------------------------------------------------
+const PASSAGES = [
+  {
+    language: "en",
+    title: "1. English",
+    urdu: false,
+    text: "Most mornings I like to take a slow walk before the city gets loud, just to clear my head and notice how the light changes along the way.",
+  },
+  {
+    language: "ur",
+    title: "2. Urdu",
+    urdu: true,
+    text: "مجھے صبح کی چائے کے بغیر دن شروع ہی نہیں لگتا، چاہے کام کتنا بھی زیادہ ہو، تھوڑی دیر سکون سے بیٹھ کر چائے ضرور پیتا ہوں۔",
+  },
+  {
+    language: "mixed",
+    title: "3. Code-switched",
+    urdu: true,
+    text: "یار، deadline زیادہ دور نہیں، لیکن client سے requirements ابھی تک clear نہیں ہوئی، اس لیے میں پہلے ایک quick call schedule کرنا چاہتا ہوں تاکہ confusion نہ رہے۔",
+  },
+];
+
+// Unicode directional isolates (FSI/PDI) — same technique as mobile's
+// src/components/Text.tsx (see docs/adr/0007-rtl-per-string-not-forced.md),
+// so an RTL passage embedded in this otherwise-LTR page can't drag
+// neighbouring layout in the wrong direction.
+const FSI = "⁨", PDI = "⁩";
+
+const state = {
+  // Tokens live only in this module-level object — never localStorage, never
+  // a URL — so there is nothing to paste in and nothing left behind in the
+  // browser after the tab closes.
+  accessToken: null,
+  refreshToken: null,
+  user: null,
+  recorders: {}, // language -> per-card recording state
+};
+
+function isSecureContext_() {
+  return window.isSecureContext;
+}
+if (!isSecureContext_()) {
+  document.getElementById("insecure-context-banner").hidden = false;
+}
+
+// --- tiny fetch helper ------------------------------------------------------
+
+async function api(path, { method = "GET", body, auth = false } = {}) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (auth) headers["Authorization"] = "Bearer " + state.accessToken;
+  const res = await fetch(path, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    let detail = res.status + " " + res.statusText;
+    try {
+      const errBody = await res.json();
+      if (errBody.detail) detail = errBody.detail;
+    } catch (_) { /* body wasn't JSON */ }
+    throw new Error(detail);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// --- tabs --------------------------------------------------------------
+
+document.querySelectorAll("nav.tabs button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-enroll").hidden = btn.dataset.tab !== "enroll";
+    document.getElementById("tab-admin").hidden = btn.dataset.tab !== "admin";
+    if (btn.dataset.tab === "admin") loadAdmin();
+  });
+});
+
+// --- auth ----------------------------------------------------------------
+
+function showAuthError(message) {
+  const el = document.getElementById("auth-error");
+  el.textContent = message;
+  el.hidden = false;
+}
+
+function onAuthed(tokens) {
+  state.accessToken = tokens.access_token;
+  state.refreshToken = tokens.refresh_token;
+  state.user = tokens.user;
+  document.getElementById("auth-panel").hidden = true;
+  document.getElementById("enroll-panel").hidden = false;
+  document.getElementById("whoami").textContent = tokens.user.display_name + " <" + tokens.user.email + ">";
+  buildPassageCards();
+  refreshStatus();
+}
+
+document.getElementById("signup-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  document.getElementById("auth-error").hidden = true;
+  const f = new FormData(e.target);
+  try {
+    const tokens = await api("/auth/signup", {
+      method: "POST",
+      body: { email: f.get("email"), password: f.get("password"), display_name: f.get("display_name") },
+    });
+    onAuthed(tokens);
+  } catch (err) {
+    showAuthError("Sign up failed: " + err.message);
+  }
+});
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  document.getElementById("auth-error").hidden = true;
+  const f = new FormData(e.target);
+  try {
+    const tokens = await api("/auth/login", { method: "POST", body: { email: f.get("email"), password: f.get("password") } });
+    onAuthed(tokens);
+  } catch (err) {
+    showAuthError("Log in failed: " + err.message);
+  }
+});
+
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  try { await api("/auth/logout", { method: "POST", body: { refresh_token: state.refreshToken } }); } catch (_) {}
+  state.accessToken = null;
+  state.refreshToken = null;
+  state.user = null;
+  document.getElementById("enroll-panel").hidden = true;
+  document.getElementById("auth-panel").hidden = false;
+});
+
+document.getElementById("reset-btn").addEventListener("click", async () => {
+  if (!confirm("This deletes every enrollment sample and the voiceprint, with no undo. Continue?")) return;
+  await api("/enrollment", { method: "DELETE", auth: true });
+  buildPassageCards();
+  document.getElementById("diagnostics-panel").hidden = true;
+  refreshStatus();
+});
+
+// --- status / progress ----------------------------------------------------
+
+async function refreshStatus() {
+  const body = await api("/enrollment/status", { auth: true });
+  const badge = document.getElementById("status-badge");
+  badge.textContent = body.enrollment_status;
+  badge.className = "badge " + body.enrollment_status;
+  const acceptedCount = body.passages.filter((p) => p.state === "accepted").length;
+  document.getElementById("progress-text").textContent = acceptedCount + " / " + body.passages.length + " passages accepted";
+
+  for (const passage of body.passages) {
+    const card = document.getElementById("card-" + passage.language);
+    if (!card) continue;
+    const badgeEl = card.querySelector(".passage-badge");
+    badgeEl.textContent = passage.state;
+    badgeEl.className = "badge passage-badge " + passage.state;
+  }
+
+  if (body.enrollment_status === "complete") {
+    await loadDiagnostics();
+  } else {
+    document.getElementById("diagnostics-panel").hidden = true;
+  }
+}
+
+async function loadDiagnostics() {
+  const panel = document.getElementById("diagnostics-panel");
+  try {
+    const d = await api("/dev/enroll/api/diagnostics", { auth: true });
+    const norm = d.centroid_l2_norm;
+    const normOk = Math.abs(norm - 1.0) < 0.001;
+    const rows = [
+      ["Centroid L2 norm", (normOk ? "" : '<span class="flag-bad">') + norm.toFixed(6) + (normOk ? " (ok)" : " — should be 1.0!</span>")],
+      ["intra_speaker_variance", d.intra_speaker_variance.toFixed(6)],
+      ["Sample count", String(d.sample_count)],
+      ["Model version", d.model_version],
+    ];
+    for (const p of d.per_passage_similarity) {
+      rows.push(["Similarity to centroid — " + p.language, p.similarity_to_centroid.toFixed(6)]);
+    }
+    rows.push([
+      "Cross-language similarity (en × ur)",
+      d.cross_language_similarity_en_ur === null ? "n/a" : d.cross_language_similarity_en_ur.toFixed(6),
+    ]);
+    const grid = document.getElementById("diagnostics-grid");
+    grid.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    panel.hidden = false;
+  } catch (err) {
+    panel.hidden = true;
+  }
+}
+
+// --- passage cards / recording ---------------------------------------------
+
+function pickMimeType() {
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+  for (const type of candidates) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return "";
+}
+
+// Encodes a decoded AudioBuffer as 16-bit PCM mono WAV. Every browser's
+// MediaRecorder output differs (webm/opus on Chrome/Firefox/Android, mp4/aac
+// on Safari) but decodeAudioData below always decodes whatever this browser
+// just recorded, so this one encoder works regardless of input container —
+// see the harness's format decision in docs/adr/0015-dev-enrollment-harness.md.
+function audioBufferToWav(buffer) {
+  const numFrames = buffer.length;
+  const sampleRate = buffer.sampleRate;
+  const channelData = [];
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) channelData.push(buffer.getChannelData(ch));
+
+  const mono = new Float32Array(numFrames);
+  for (let i = 0; i < numFrames; i++) {
+    let sum = 0;
+    for (let ch = 0; ch < channelData.length; ch++) sum += channelData[ch][i];
+    mono[i] = sum / channelData.length;
+  }
+
+  const blockAlign = 2; // mono, 16-bit
+  const dataSize = numFrames * blockAlign;
+  const out = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(out);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < numFrames; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, mono[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return new Blob([view], { type: "audio/wav" });
+}
+
+function buildPassageCards() {
+  const container = document.getElementById("passages");
+  container.innerHTML = "";
+  state.recorders = {};
+  for (const passage of PASSAGES) {
+    const rec = { stream: null, audioCtx: null, analyser: null, mediaRecorder: null, chunks: [], meterRaf: null, timerInterval: null, wavBlob: null };
+    state.recorders[passage.language] = rec;
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.id = "card-" + passage.language;
+    const textClass = passage.urdu ? "passage-text urdu" : "passage-text";
+    const textContent = passage.urdu ? FSI + passage.text + PDI : passage.text;
+    card.innerHTML = `
+      <h3>${passage.title} <span class="badge passage-badge not_attempted">not_attempted</span></h3>
+      <div class="${textClass}"${passage.urdu ? ' dir="rtl" lang="ur"' : ""}>${textContent}</div>
+      <div class="meter-row">
+        <button data-action="record" class="primary">● Record</button>
+        <button data-action="stop" disabled>■ Stop</button>
+        <div class="meter"><div class="meter-fill"></div></div>
+        <span class="timer">0.0s</span>
+      </div>
+      <audio controls hidden></audio>
+      <div class="playback-actions" hidden>
+        <button data-action="rerecord">Re-record</button>
+        <button data-action="submit" class="primary">Submit</button>
+      </div>
+      <div class="result" hidden></div>
+    `;
+    container.appendChild(card);
+
+    card.querySelector('[data-action="record"]').addEventListener("click", () => startRecording(passage.language));
+    card.querySelector('[data-action="stop"]').addEventListener("click", () => stopRecording(passage.language));
+    card.querySelector('[data-action="rerecord"]').addEventListener("click", () => reRecord(passage.language));
+    card.querySelector('[data-action="submit"]').addEventListener("click", () => submitPassage(passage.language));
+  }
+}
+
+async function startRecording(language) {
+  const card = document.getElementById("card-" + language);
+  const rec = state.recorders[language];
+  try {
+    rec.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    alert("Microphone access failed: " + err.message + (isSecureContext_() ? "" : " (this page is not a secure context — see the banner at the top)"));
+    return;
+  }
+
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  rec.audioCtx = new AudioContextCtor();
+  const source = rec.audioCtx.createMediaStreamSource(rec.stream);
+  rec.analyser = rec.audioCtx.createAnalyser();
+  rec.analyser.fftSize = 512;
+  source.connect(rec.analyser);
+
+  const meterFill = card.querySelector(".meter-fill");
+  const dataArray = new Uint8Array(rec.analyser.fftSize);
+  const drawMeter = () => {
+    rec.analyser.getByteTimeDomainData(dataArray);
+    let sumSquares = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      const norm = (dataArray[i] - 128) / 128;
+      sumSquares += norm * norm;
+    }
+    const rms = Math.sqrt(sumSquares / dataArray.length);
+    meterFill.style.width = Math.min(100, rms * 250) + "%";
+    rec.meterRaf = requestAnimationFrame(drawMeter);
+  };
+  drawMeter();
+
+  rec.chunks = [];
+  rec.mediaRecorder = new MediaRecorder(rec.stream, pickMimeType() ? { mimeType: pickMimeType() } : undefined);
+  rec.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) rec.chunks.push(e.data); };
+  rec.mediaRecorder.onstop = () => onRecordingStopped(language);
+  rec.mediaRecorder.start();
+
+  const timerEl = card.querySelector(".timer");
+  const startedAt = Date.now();
+  rec.timerInterval = setInterval(() => {
+    timerEl.textContent = ((Date.now() - startedAt) / 1000).toFixed(1) + "s";
+  }, 100);
+
+  card.querySelector('[data-action="record"]').disabled = true;
+  card.querySelector('[data-action="stop"]').disabled = false;
+}
+
+function stopRecording(language) {
+  const rec = state.recorders[language];
+  if (rec.mediaRecorder && rec.mediaRecorder.state !== "inactive") rec.mediaRecorder.stop();
+  if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop());
+  if (rec.meterRaf) cancelAnimationFrame(rec.meterRaf);
+  if (rec.timerInterval) clearInterval(rec.timerInterval);
+
+  const card = document.getElementById("card-" + language);
+  card.querySelector('[data-action="record"]').disabled = false;
+  card.querySelector('[data-action="stop"]').disabled = true;
+}
+
+async function onRecordingStopped(language) {
+  const rec = state.recorders[language];
+  const card = document.getElementById("card-" + language);
+  const blob = new Blob(rec.chunks, { type: rec.mediaRecorder.mimeType || "audio/webm" });
+
+  const arrayBuffer = await blob.arrayBuffer();
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  const decodeCtx = new AudioContextCtor();
+  let audioBuffer;
+  try {
+    audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+  } catch (err) {
+    alert("Could not decode the recording: " + err.message + ". Try recording again.");
+    return;
+  }
+  rec.wavBlob = audioBufferToWav(audioBuffer);
+
+  const audioEl = card.querySelector("audio");
+  audioEl.src = URL.createObjectURL(rec.wavBlob);
+  audioEl.hidden = false;
+  card.querySelector(".playback-actions").hidden = false;
+}
+
+function reRecord(language) {
+  const card = document.getElementById("card-" + language);
+  const rec = state.recorders[language];
+  rec.wavBlob = null;
+  rec.chunks = [];
+  card.querySelector("audio").hidden = true;
+  card.querySelector(".playback-actions").hidden = true;
+  card.querySelector(".result").hidden = true;
+  card.querySelector(".timer").textContent = "0.0s";
+  card.querySelector(".meter-fill").style.width = "0%";
+}
+
+async function submitPassage(language) {
+  const card = document.getElementById("card-" + language);
+  const rec = state.recorders[language];
+  const resultEl = card.querySelector(".result");
+  const submitBtn = card.querySelector('[data-action="submit"]');
+  submitBtn.disabled = true;
+  resultEl.hidden = true;
+
+  try {
+    // 1. Real presigned-upload endpoint — audio_format:"wav" is the one
+    //    production-contract widening this harness needed; see
+    //    docs/adr/0015-dev-enrollment-harness.md.
+    const upload = await api("/enrollment/uploads", { method: "POST", auth: true, body: { language, audio_format: "wav" } });
+
+    // 2. Real R2 PUT — Content-Type must match what create_upload_url() signed.
+    const putRes = await fetch(upload.upload_url, { method: "PUT", headers: { "Content-Type": "audio/wav" }, body: rec.wavBlob });
+    if (!putRes.ok) throw new Error("R2 upload failed: " + putRes.status + " " + putRes.statusText);
+
+    // 3. Real submit endpoint — the actual quality gate + embedding pipeline.
+    const submitResult = await api("/enrollment/samples", { method: "POST", auth: true, body: { language, audio_key: upload.audio_key } });
+
+    // 4. Dev-only: the measured numbers the real response above doesn't carry.
+    let measurement = null;
+    try {
+      const measurements = await api("/dev/enroll/api/samples", { auth: true });
+      measurement = measurements.find((m) => m.language === language) || null;
+    } catch (_) { /* diagnostics are best-effort */ }
+
+    renderResult(resultEl, submitResult, measurement);
+    await refreshStatus();
+  } catch (err) {
+    resultEl.hidden = false;
+    resultEl.className = "result rejected";
+    resultEl.textContent = "Submission failed: " + err.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+function renderResult(resultEl, submitResult, measurement) {
+  resultEl.hidden = false;
+  resultEl.className = "result " + (submitResult.accepted ? "accepted" : "rejected");
+  let html = submitResult.accepted ? "Accepted." : ("Rejected — " + submitResult.reason_message);
+  if (measurement) {
+    html += `<div class="measurements">Measured: ${measurement.speech_duration_sec.toFixed(1)}s of speech in a ${measurement.duration_sec.toFixed(1)}s clip, SNR ${measurement.snr_db.toFixed(1)} dB</div>`;
+  }
+  resultEl.innerHTML = html;
+}
+
+// --- admin tab --------------------------------------------------------
+
+async function loadAdmin() {
+  const tbody = document.getElementById("admin-tbody");
+  tbody.innerHTML = "<tr><td colspan=6>Loading…</td></tr>";
+  try {
+    const rows = await api("/dev/enroll/api/admin/users");
+    tbody.innerHTML = rows.map((r) => `
+      <tr>
+        <td>${r.email}</td>
+        <td>${r.display_name}</td>
+        <td><span class="badge ${r.enrollment_status}">${r.enrollment_status}</span></td>
+        <td>${r.accepted_sample_count} / ${r.total_sample_count}</td>
+        <td>${r.intra_speaker_variance === null ? "—" : r.intra_speaker_variance.toFixed(4)}</td>
+        <td>${r.centroid_l2_norm === null ? "—" : r.centroid_l2_norm.toFixed(4)}</td>
+      </tr>
+    `).join("") || "<tr><td colspan=6>No users yet.</td></tr>";
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan=6>Failed to load: ${err.message}</td></tr>`;
+  }
+}
+
+document.getElementById("refresh-admin").addEventListener("click", loadAdmin);
+</script>
+</body>
+</html>
