@@ -89,6 +89,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/enrollment/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Upload Url */
+        post: operations["create_upload_url_enrollment_uploads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/enrollment/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Sample */
+        post: operations["submit_sample_enrollment_samples_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/enrollment/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Enrollment Status */
+        get: operations["get_enrollment_status_enrollment_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/enrollment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Reset Enrollment */
+        delete: operations["reset_enrollment_enrollment_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -111,6 +179,12 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * EnrollmentLanguage
+         * @description One value per enrollment passage — see docs/ENROLLMENT_PASSAGES.md.
+         * @enum {string}
+         */
+        EnrollmentLanguage: "en" | "ur" | "mixed";
+        /**
          * EnrollmentStatus
          * @description Where a user is in voice enrollment. Gates meeting-join, not signup — see
          *     docs/PROJECT_BRIEF.md 'Enrollment is a soft gate'. Only NOT_STARTED is reachable
@@ -118,6 +192,12 @@ export interface components {
          * @enum {string}
          */
         EnrollmentStatus: "not_started" | "in_progress" | "complete" | "failed";
+        /** EnrollmentStatusResponse */
+        EnrollmentStatusResponse: {
+            enrollment_status: components["schemas"]["EnrollmentStatus"];
+            /** Passages */
+            passages: components["schemas"]["PassageStatus"][];
+        };
         /** GoogleSignInRequest */
         GoogleSignInRequest: {
             /** Id Token */
@@ -142,6 +222,16 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** PassageStatus */
+        PassageStatus: {
+            language: components["schemas"]["EnrollmentLanguage"];
+            /** State */
+            state: string;
+            /** Reason Code */
+            reason_code: string | null;
+            /** Reason Message */
+            reason_message: string | null;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
@@ -156,6 +246,22 @@ export interface components {
             /** Display Name */
             display_name: string;
         };
+        /** SubmitSampleRequest */
+        SubmitSampleRequest: {
+            language: components["schemas"]["EnrollmentLanguage"];
+            /** Audio Key */
+            audio_key: string;
+        };
+        /** SubmitSampleResponse */
+        SubmitSampleResponse: {
+            /** Accepted */
+            accepted: boolean;
+            /** Reason Code */
+            reason_code: string | null;
+            /** Reason Message */
+            reason_message: string | null;
+            enrollment_status: components["schemas"]["EnrollmentStatus"];
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -168,6 +274,19 @@ export interface components {
              */
             token_type: string;
             user: components["schemas"]["UserResponse"];
+        };
+        /** UploadUrlRequest */
+        UploadUrlRequest: {
+            language: components["schemas"]["EnrollmentLanguage"];
+        };
+        /** UploadUrlResponse */
+        UploadUrlResponse: {
+            /** Upload Url */
+            upload_url: string;
+            /** Audio Key */
+            audio_key: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
         };
         /** UserResponse */
         UserResponse: {
@@ -355,6 +474,136 @@ export interface operations {
                 "application/json": components["schemas"]["RefreshRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_upload_url_enrollment_uploads_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadUrlRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_sample_enrollment_samples_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitSampleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmitSampleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_enrollment_status_enrollment_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_enrollment_enrollment_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             204: {
