@@ -73,6 +73,8 @@ Kept so centroids can be recomputed if the model changes.
 | `id` | uuid | PK |
 | `name` | text | |
 | `owner_user_id` | uuid | FK → users. Exactly one, transferable. |
+| `join_code` | text | unique, 8-char Crockford Base32, uppercase, no dash stored. Permanent — shared verbally or by screenshot — until an owner/admin regenerates it. See docs/adr/0016-two-workspace-join-mechanisms.md. |
+| `code_joining_enabled` | bool | default true. Owner/admin can disable code-joining entirely without touching the code itself. |
 | `created_at` | timestamptz | |
 
 ### `workspace_members`
@@ -88,20 +90,26 @@ Kept so centroids can be recomputed if the model changes.
 Unique on `(workspace_id, user_id)`.
 
 ### `invites`
-Covers both workspace invites and project invites.
+Covers both workspace invites and project invites. Only email invites now — the shareable
+code moved to `workspaces.join_code` (and already lived on `projects.join_code`), so every
+row here is a targeted, single-use, auditable invite. See
+docs/adr/0016-two-workspace-join-mechanisms.md.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | PK |
-| `scope` | enum | `workspace` / `project` |
+| `scope` | enum | `workspace` / `project` — `project` reserved for Phase 5, unused now |
 | `workspace_id` | uuid | FK |
 | `project_id` | uuid | nullable, required when scope=`project` |
-| `email` | citext | nullable — null means it's a shareable code, not a targeted email |
+| `email` | citext | NOT NULL — every invite is targeted now |
 | `token` | text | unique, 32-byte urlsafe. Used in the emailed link. |
-| `join_code` | text | 8-char human-typeable, uppercase, no ambiguous chars (no O/0/I/1) |
 | `invited_by_user_id` | uuid | FK |
-| `expires_at` | timestamptz | 7 days for email invites, 30 for codes |
+| `expires_at` | timestamptz | 7 days |
 | `accepted_at` | timestamptz | nullable |
+| `accepted_by_user_id` | uuid | FK → users, nullable. Recorded separately from `email` because acceptance isn't email-bound — see docs/adr/0018-invite-acceptance-not-email-bound.md. |
+| `revoked_at` | timestamptz | nullable — set when an owner/admin revokes a pending invite |
+| `email_status` | enum | `sending` / `sent` / `failed`. Backs the UI's pending-invite status. See docs/adr/0017-gmail-smtp-behind-notifier.md. |
+| `email_error` | text | nullable — last send failure reason, shown to the inviting admin |
 | `created_at` | timestamptz | |
 
 ### `projects`
@@ -216,3 +224,5 @@ Listed here only so nobody accidentally reuses these names for something else.
 3. `audio_chunks.sequence` must be gapless per track before a meeting can move to `ready_to_process`.
 4. Every meeting has exactly one `is_reference = true` track once alignment runs.
 5. A user can be in many workspaces; a voiceprint is shared across all of them.
+6. Exactly one `workspace_members` row per workspace has `role='owner'`, matching `workspaces.owner_user_id`. Transfer, never delete-and-recreate.
+7. An `invites` row's `accepted_by_user_id` need not match its `email` — whoever holds the token and is signed in can accept it.

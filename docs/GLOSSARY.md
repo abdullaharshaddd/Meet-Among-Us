@@ -97,3 +97,19 @@ Plain-English definitions, added the first time each term is used in code.
   loaded over plain HTTP from a LAN IP (e.g. `http://192.168.1.5:8001`) does not qualify, even
   on a private network — this is why the dev enrollment harness needs a self-signed TLS
   certificate to be usable from a phone. See docs/adr/0015-dev-enrollment-harness.md.
+- **Crockford Base32** — a 32-symbol alphabet (digits 0-9 and letters A-Z, minus I, L, O, U)
+  designed to be read aloud and typed back correctly: the dropped letters are the ones most
+  often confused with a digit or with each other. Used here for workspace join codes.
+- **SMTP / app password** — SMTP is the protocol used to hand an email to a mail server for
+  delivery. An app password is a separate, revocable password Google issues for exactly this —
+  letting a script send through a Gmail account without using (or storing) the account's real
+  login password.
+- **Background task** — work scheduled to run after an HTTP response is already on its way to
+  the client, so the request doesn't wait on something slow (like sending an email) that the
+  response doesn't actually need to succeed.
+- **Idempotent** — an operation that produces the same end state no matter how many times it's
+  repeated with the same input. An idempotent "accept invite" means clicking the link twice
+  doesn't error or double-join the workspace.
+- **Deep link** — a URL that opens directly to a specific screen inside an app (rather than the
+  app's home screen) when the app is installed, e.g. tapping an invite link opens the join
+  screen instead of a browser.

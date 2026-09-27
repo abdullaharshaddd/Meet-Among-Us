@@ -29,7 +29,7 @@ Do not revisit these without being asked. They are settled.
 | Backend | FastAPI (Python 3.11+), Pydantic v2, SQLAlchemy 2.0, Alembic migrations |
 | Database | PostgreSQL (Neon free tier) |
 | Object storage | Cloudflare R2, S3-compatible SDK (zero egress fees — this is why, not S3) |
-| Email | Resend |
+| Email | Gmail SMTP for now — Resend's free tier can't send to third parties until the sending domain is verified. See docs/adr/0017-gmail-smtp-behind-notifier.md. |
 | Push | Expo Push Notifications |
 | Auth | Own JWT (access + refresh) **and** Google Sign-In. Google client ID reused later for Calendar OAuth. |
 | Repo | Monorepo: `/mobile`, `/backend`, `/ml`, `/docs`, `/scripts` |

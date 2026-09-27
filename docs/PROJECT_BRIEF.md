@@ -89,7 +89,7 @@ Settled. Each has a reason.
 | API | FastAPI, Python 3.11 | Matches the ML stack |
 | Database | **Supabase Postgres** | pgvector preinstalled (we store 192-dim voiceprints); dashboard matters when three people are debugging |
 | Audio storage | **Cloudflare R2** | 10 GB free with **zero egress fees** — we will pull audio down to Colab repeatedly, and egress charges are what would kill us. Not Supabase Storage. |
-| Email | Resend, sending from `intellivisionai.com` | Free tier only sends to your own address without a verified domain |
+| Email | Gmail SMTP (Phase 2) | Resend's free tier only sends to your own address until `intellivisionai.com` is verified as a sending domain — switched to unblock real invite testing. Sits behind an `EmailSender` interface so Resend is a one-file swap once the domain is verified. See docs/adr/0017-gmail-smtp-behind-notifier.md. |
 | Push | Expo Push Notifications | Wraps FCM in one line |
 | Auth | Own JWT + Google Sign-In | Google client ID gets reused for Calendar OAuth later |
 
