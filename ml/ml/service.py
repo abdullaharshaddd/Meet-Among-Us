@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
     # Loading is slow (seconds); doing it here means the first real request is fast,
     # not the health check — see embedding.py. VAD lazy-loads on first use in
     # quality.run_quality_gate() instead, since it's cheap enough not to matter.
+    audio.check_ffmpeg_installed()
     embedding.load_model()
     yield
 
@@ -46,7 +47,7 @@ def health() -> dict[str, str]:
 
 @app.post("/embed", response_model=EmbedResponse)
 async def embed_sample(request: Request) -> EmbedResponse:
-    """Body is the raw audio file bytes (WAV/FLAC) — an internal service call, not a
+    """Body is the raw audio file bytes (WAV/FLAC/m4a) — an internal service call, not a
     browser upload, so a plain octet-stream body is simpler than multipart."""
     audio_bytes = await request.body()
     samples, sample_rate = audio.decode(audio_bytes)

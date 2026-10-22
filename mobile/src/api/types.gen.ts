@@ -157,6 +157,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dev/enroll/api/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sample Measurements */
+        get: operations["sample_measurements_dev_enroll_api_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Diagnostics */
+        get: operations["diagnostics_dev_enroll_api_diagnostics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Users */
+        get: operations["admin_users_dev_enroll_api_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -178,6 +229,38 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminUserRow */
+        AdminUserRow: {
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name: string;
+            /** Enrollment Status */
+            enrollment_status: string;
+            /** Accepted Sample Count */
+            accepted_sample_count: number;
+            /** Total Sample Count */
+            total_sample_count: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number | null;
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number | null;
+        };
+        /** DiagnosticsResponse */
+        DiagnosticsResponse: {
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number;
+            /** Sample Count */
+            sample_count: number;
+            /** Model Version */
+            model_version: string;
+            /** Per Passage Similarity */
+            per_passage_similarity: components["schemas"]["PerPassageSimilarity"][];
+            /** Cross Language Similarity En Ur */
+            cross_language_similarity_en_ur: number | null;
+        };
         /**
          * EnrollmentLanguage
          * @description One value per enrollment passage — see docs/ENROLLMENT_PASSAGES.md.
@@ -232,10 +315,32 @@ export interface components {
             /** Reason Message */
             reason_message: string | null;
         };
+        /** PerPassageSimilarity */
+        PerPassageSimilarity: {
+            /** Language */
+            language: string;
+            /** Similarity To Centroid */
+            similarity_to_centroid: number;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** SampleMeasurement */
+        SampleMeasurement: {
+            /** Language */
+            language: string;
+            /** Accepted */
+            accepted: boolean;
+            /** Reason Code */
+            reason_code: string | null;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Speech Duration Sec */
+            speech_duration_sec: number;
+            /** Snr Db */
+            snr_db: number;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -278,6 +383,12 @@ export interface components {
         /** UploadUrlRequest */
         UploadUrlRequest: {
             language: components["schemas"]["EnrollmentLanguage"];
+            /**
+             * Audio Format
+             * @default flac
+             * @enum {string}
+             */
+            audio_format: "flac" | "wav" | "m4a" | "webm";
         };
         /** UploadUrlResponse */
         UploadUrlResponse: {
@@ -496,9 +607,7 @@ export interface operations {
     create_upload_url_enrollment_uploads_post: {
         parameters: {
             query?: never;
-            header?: {
-                authorization?: string | null;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -531,9 +640,7 @@ export interface operations {
     submit_sample_enrollment_samples_post: {
         parameters: {
             query?: never;
-            header?: {
-                authorization?: string | null;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -566,9 +673,7 @@ export interface operations {
     get_enrollment_status_enrollment_status_get: {
         parameters: {
             query?: never;
-            header?: {
-                authorization?: string | null;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -583,23 +688,12 @@ export interface operations {
                     "application/json": components["schemas"]["EnrollmentStatusResponse"];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
     reset_enrollment_enrollment_delete: {
         parameters: {
             query?: never;
-            header?: {
-                authorization?: string | null;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -612,13 +706,64 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Validation Error */
-            422: {
+        };
+    };
+    sample_measurements_dev_enroll_api_samples_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["SampleMeasurement"][];
+                };
+            };
+        };
+    };
+    diagnostics_dev_enroll_api_diagnostics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiagnosticsResponse"];
+                };
+            };
+        };
+    };
+    admin_users_dev_enroll_api_admin_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRow"][];
                 };
             };
         };

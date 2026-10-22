@@ -34,7 +34,7 @@ UPLOAD_URL_EXPIRES_IN_SECONDS = 900
 # audio_format -> R2 Content-Type. A presigned PUT that specifies ContentType binds
 # it into the signature (a well-known S3/R2 gotcha), so the caller's declared format
 # must match the bytes it actually uploads or R2 rejects the PUT outright.
-_CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav"}
+_CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav", "m4a": "audio/mp4", "webm": "audio/webm"}
 
 # A passage rejected this many times in a row, with no acceptance since, flips
 # enrollment_status to 'failed' — a UX signal to stop retrying blindly and show
@@ -63,9 +63,7 @@ def _reason_message(reason_code: str, speech_duration_sec: float) -> str:
 def create_upload_url(
     user: User, language: EnrollmentLanguage, audio_format: str = "flac"
 ) -> UploadUrlResponse:
-    # FLAC per CLAUDE.md's locked "record WAV, upload FLAC" decision — the mobile
-    # client transcodes before this URL ever gets used. "wav" is the /dev/enroll
-    # harness only — see UploadUrlRequest.audio_format.
+    # See UploadUrlRequest.audio_format for which client sends which format.
     audio_key = f"enrollment/{user.id}/{language.value}/{uuid4()}.{audio_format}"
     upload_url = storage.presign_put(
         audio_key,

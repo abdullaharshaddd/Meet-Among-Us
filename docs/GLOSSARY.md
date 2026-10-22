@@ -113,3 +113,5 @@ Plain-English definitions, added the first time each term is used in code.
 - **Deep link** — a URL that opens directly to a specific screen inside an app (rather than the
   app's home screen) when the app is installed, e.g. tapping an invite link opens the join
   screen instead of a browser.
+- **AAC / m4a** — a compressed audio format (AAC) stored in an MP4-style file (.m4a); it is what Expo records on Android.
+- **ffmpeg** — a command-line program that converts almost any audio or video file into another format; the ML service uses it to read m4a.
