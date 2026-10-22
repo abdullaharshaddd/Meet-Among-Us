@@ -224,3 +224,23 @@ def _decode_sub(access_token: str) -> str:
     from app.core import security
 
     return security.decode_token(access_token)["sub"]
+
+
+def test_m4a_upload_url_binds_audio_mp4(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict = {}
+
+    def fake_presign(key: str, *, content_type: str, expires_in: int = 900) -> str:
+        captured["key"] = key
+        captured["content_type"] = content_type
+        return "https://fake-r2.example/put"
+
+    monkeypatch.setattr(storage, "presign_put", fake_presign)
+    tokens = _signup(client)
+
+    response = client.post(
+        "/enrollment/uploads", json={"language": "en", "audio_format": "m4a"}, headers=_auth(tokens)
+    )
+
+    assert response.status_code == 200
+    assert captured["content_type"] == "audio/mp4"
+    assert captured["key"].endswith(".m4a")

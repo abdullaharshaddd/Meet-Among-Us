@@ -9,6 +9,7 @@ from app.core.db import get_db
 from app.core.exceptions import AppError
 from app.routers.auth import router as auth_router
 from app.routers.enrollment import router as enrollment_router
+from app.routers.workspaces import router as workspaces_router
 from app.schemas.health import HealthResponse
 
 app = FastAPI(title="AI Meeting Intelligence Agent")
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(enrollment_router)
+app.include_router(workspaces_router)
 
 if settings.dev_tools_enabled:
     # /dev/enroll only exists on a developer's own machine — see

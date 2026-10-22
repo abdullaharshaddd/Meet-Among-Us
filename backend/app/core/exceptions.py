@@ -52,3 +52,22 @@ class MLServiceUnavailableError(AppError):
     the sample — does not count toward the three-strikes 'failed' status."""
 
     status_code = 503
+
+
+class WorkspaceNotFoundError(AppError):
+    """Also raised when the workspace exists but the caller is not in it, so a
+    response never confirms that someone else's workspace id is real."""
+
+    status_code = 404
+
+
+class PermissionDeniedError(AppError):
+    status_code = 403
+
+
+class InvalidJoinCodeError(AppError):
+    status_code = 404
+
+
+class CodeJoiningDisabledError(AppError):
+    status_code = 403

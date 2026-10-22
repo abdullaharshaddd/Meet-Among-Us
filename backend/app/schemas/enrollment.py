@@ -8,13 +8,11 @@ from app.models.user import EnrollmentStatus
 
 class UploadUrlRequest(BaseModel):
     language: EnrollmentLanguage
-    # Defaults to "flac" — the only format the real mobile app ever sends, per
-    # CLAUDE.md's locked "record WAV, upload FLAC" decision. "wav" exists solely
-    # for the /dev/enroll browser harness: a MediaRecorder can't produce FLAC
-    # without a bundled encoder, and WAV needs no new decoding support since
-    # ml/audio.py's soundfile-based decode() already reads it natively. See
-    # docs/adr/0015-dev-enrollment-harness.md.
-    audio_format: Literal["flac", "wav"] = "flac"
+    # "m4a" is what the real mobile app sends: Expo cannot record FLAC or WAV on
+    # Android, see docs/adr/0019-accept-m4a-enrollment-audio.md. "wav" exists for
+    # the /dev/enroll browser harness (docs/adr/0015-dev-enrollment-harness.md).
+    # "webm" is what a browser records, used when the app runs on Expo web.
+    audio_format: Literal["flac", "wav", "m4a", "webm"] = "flac"
 
 
 class UploadUrlResponse(BaseModel):
