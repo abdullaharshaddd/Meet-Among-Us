@@ -24,3 +24,13 @@ class WorkspaceResponse(BaseModel):
     # Only owners and admins see the code, as XXXX-XXXX. Members get null.
     join_code: str | None
     code_joining_enabled: bool
+
+
+class WorkspaceMemberResponse(BaseModel):
+    user_id: UUID
+    display_name: str
+    # Only the owner sees other members' email addresses; everyone else gets null.
+    email: str | None
+    role: WorkspaceRole
+    can_create_projects: bool
+    joined_at: datetime

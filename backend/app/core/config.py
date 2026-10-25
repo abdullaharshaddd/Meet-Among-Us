@@ -52,5 +52,23 @@ class Settings(BaseSettings):
     # just one hidden behind a runtime check.
     dev_tools_enabled: bool = False
 
+    # Invite email via Gmail SMTP — docs/adr/0017-gmail-smtp-behind-notifier.md.
+    # Defaulted empty so the app and tests start without them; with no smtp_host the
+    # email sender reports "not configured" and the invite is marked failed (resendable).
+    # smtp_password is a Gmail *app password*, never the account password. .env only.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    # Defaults to smtp_user when blank; Gmail rewrites other From addresses anyway.
+    smtp_from_address: str = ""
+    # Short on purpose: the send runs in a background task, but a hung socket would
+    # still hold a worker thread.
+    smtp_timeout_seconds: int = 10
+    # https:// base of the page the emailed link opens, e.g. https://example.com/join.
+    # The token is appended as /<token>. Must be https: custom-scheme links are not
+    # clickable in most mail clients.
+    invite_link_base_url: str = ""
+
 
 settings = Settings()  # type: ignore[call-arg]  # values come from .env, not literals

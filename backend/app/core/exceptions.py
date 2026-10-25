@@ -71,3 +71,38 @@ class InvalidJoinCodeError(AppError):
 
 class CodeJoiningDisabledError(AppError):
     status_code = 403
+
+
+class InviteNotFoundError(AppError):
+    """Unknown token or id. Same 404 for both, so a response never confirms whether a
+    guessed token was ever real."""
+
+    status_code = 404
+
+
+class InviteExpiredError(AppError):
+    status_code = 410
+
+
+class InviteRevokedError(AppError):
+    status_code = 410
+
+
+class InviteAlreadyUsedError(AppError):
+    """A different user already accepted this token  - see
+    docs/adr/0018-invite-acceptance-not-email-bound.md. The same user re-accepting is
+    success, not this error."""
+
+    status_code = 409
+
+
+class InviteAlreadyPendingError(AppError):
+    """An unexpired, unrevoked invite for this email already exists in the workspace."""
+
+    status_code = 409
+
+
+class AlreadyWorkspaceMemberError(AppError):
+    """The invited email already belongs to a member of this workspace."""
+
+    status_code = 409

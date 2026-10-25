@@ -7,7 +7,7 @@ from app.core.exceptions import CodeJoiningDisabledError, InvalidJoinCodeError
 from app.models.user import User
 from app.models.workspace import Workspace, WorkspaceMember, WorkspaceRole
 from app.repositories import workspace_member_repository, workspace_repository
-from app.schemas.workspace import WorkspaceResponse
+from app.schemas.workspace import WorkspaceMemberResponse, WorkspaceResponse
 from app.services import permissions
 
 MAX_CODE_ATTEMPTS = 5
@@ -59,6 +59,23 @@ def get_workspace(db: Session, user: User, workspace_id: UUID) -> WorkspaceRespo
     workspace = workspace_repository.get_by_id(db, workspace_id)
 
     return to_response(workspace, member)
+
+
+def list_members(db: Session, user: User, workspace_id: UUID) -> list[WorkspaceMemberResponse]:
+    viewer = permissions.require_member(db, workspace_id, user.id)
+    sees_emails = viewer.role == WorkspaceRole.OWNER
+
+    return [
+        WorkspaceMemberResponse(
+            user_id=member.user_id,
+            display_name=member_user.display_name,
+            email=member_user.email if sees_emails else None,
+            role=member.role,
+            can_create_projects=permissions.can_create_projects(member),
+            joined_at=member.joined_at,
+        )
+        for member, member_user in workspace_member_repository.list_with_users(db, workspace_id)
+    ]
 
 
 def join_by_code(db: Session, user: User, raw_code: str) -> WorkspaceResponse:

@@ -117,3 +117,7 @@ Plain-English definitions, added the first time each term is used in code.
 - **ffmpeg** — a command-line program that converts almost any audio or video file into another format; the ML service uses it to read m4a.
 - **Workspace** — a group of people (a team or company) who share projects and meetings in the app.
 - **Join code** — an 8-character code (shown as XXXX-XXXX) that lets anyone who has it join a workspace without an email invite.
+- **Invite token** — a long random string in the emailed invite; whoever holds it and is signed in can accept that one invite.
+- **Idempotent** — doing the same thing twice has the same result as doing it once, so tapping "accept" twice never causes an error or a duplicate.
+- **Background task** — work the server does after it has already replied to the request, such as sending an email, so the user never waits for it.
+- **Row lock** — a database promise that only one request at a time may change a given row, used so two people cannot accept the same invite at once.
