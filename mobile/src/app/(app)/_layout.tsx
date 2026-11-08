@@ -1,38 +1,33 @@
 import { Redirect, Tabs } from "expo-router";
-import { borders, colors, fonts, type } from "@/theme/tokens";
+import { TabBar } from "@/components/ui";
+import { useTheme } from "@/theme/ThemeProvider";
 import { useAuthStore } from "@/store/authStore";
 
 // The auth guard: every screen under (app) relies on this redirect instead
 // of checking for a token itself.
 export default function AppLayout() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const { colors } = useTheme();
 
   if (!accessToken) {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // Text-only tabs — no icon library is installed yet, and label-only tabs
-  // still fit the restrained direction. Revisit with icons as a polish
-  // pass, not a gap.
+  // Four tabs. The other routes live in the same navigator so they can go full screen,
+  // but they have no tab of their own and the bar hides itself on them.
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent.base,
-        tabBarInactiveTintColor: colors.text.secondary,
-        tabBarStyle: {
-          backgroundColor: colors.bg.surface,
-          borderTopColor: colors.border.default,
-          borderTopWidth: borders.hairline,
-        },
-        tabBarLabelStyle: { fontFamily: fonts.uiMedium, fontSize: type.caption.size },
-      }}
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.canvas } }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="projects" options={{ title: "Projects" }} />
-      <Tabs.Screen name="meetings" options={{ title: "Meetings" }} />
-      <Tabs.Screen name="enroll" options={{ title: "Enroll" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      <Tabs.Screen name="meetings" />
+      <Tabs.Screen name="tasks" />
+      <Tabs.Screen name="assistant" />
+      <Tabs.Screen name="settings" />
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="live" options={{ href: null }} />
+      <Tabs.Screen name="enroll" options={{ href: null }} />
+      <Tabs.Screen name="workspaces" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -44,7 +44,7 @@ Do not revisit these without being asked. They are settled.
 
 ## Vocabulary — use these exactly
 
-- **Guest** = a real, named external person invited to one meeting. No account, no voiceprint, no device, no recording track. Pre-declared by the host.
+- **Guest** = a real, named external person invited to one meeting. No account, no voiceprint, no device, no recording track. Declared by the host, or named when renaming an Unknown Speaker.
 - **Unknown Speaker N** = a transcript segment whose speaker embedding fell below the match threshold. A *label*, not a person.
 
 These are different concepts. Never use "Guest N" for an unmatched segment.
@@ -63,7 +63,7 @@ These are different concepts. Never use "Guest N" for an unmatched segment.
 **Mobile**
 - Expo Router (file-based). TanStack Query for all server state. Zustand for local UI state only.
 - No `any`. No inline hex colours — use the token file.
-- Design system: dark mode, canvas `#0D1117`, accent teal `#14B8A6`, IBM Plex Sans (UI text — see ADR-0005), IBM Plex Mono (numerics/timestamps), Noto Nastaliq Urdu (RTL segments). Full token set in `mobile/src/theme/tokens.ts`.
+- Design system: "Field Recorder" (ADR-0024). Paper (light) and Studio (dark) themes following the system setting, warm neutrals, ink-filled primary buttons, and one orange `signal` colour that means recording only. Instrument Serif (display, 24 pt+), Instrument Sans (UI), Geist Mono (labels, numerics, timestamps), Noto Nastaliq Urdu (RTL segments). Full token set in `mobile/src/theme/tokens.ts`.
 
 **Shared types**
 - Backend Pydantic models are the source of truth. Generate the OpenAPI spec, then generate TypeScript types into `/mobile/src/api/types.gen.ts`. Never hand-write a type that mirrors a backend model.

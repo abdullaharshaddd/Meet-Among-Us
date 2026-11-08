@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { View } from "react-native";
-import { colors, radii } from "@/theme/tokens";
+import { colors, radii } from "@/theme/legacy";
 import { Text } from "./Text";
 
 type Size = "sm" | "md" | "lg";

@@ -5,7 +5,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Screen, Text, Button } from "@/components";
 import { findPassage } from "@/lib/enrollmentPassages";
 import { useEnrollmentDraftStore } from "@/store/enrollmentDraftStore";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function ReviewRecordingScreen() {
   const router = useRouter();

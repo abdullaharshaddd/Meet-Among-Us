@@ -37,3 +37,13 @@ sealed unit," which is exactly what embedding one language inside another needs.
   ever gotten wrong in review.
 - If a future milestone needs a fully Urdu-first surface, `forceRTL` is still the right tool
   there — this ADR doesn't rule it out, it just says today's mixed-language screens don't need it.
+
+## Amendment (ADR-0024, `BilingualText`)
+
+Mixed-language strings now go through `BilingualText` instead of a hand-placed `<Urdu>`. It splits
+the string into Urdu and non-Urdu runs (`src/lib/scriptRuns.ts`) and sets each run in its own font.
+The outer line height is the Nastaliq one whenever any Urdu is present. A string that starts with
+Urdu gets a U+200F right-to-left mark and right alignment. Latin names and timestamps inside an
+Urdu sentence are wrapped in U+2066 and U+2069 isolates. This replaces the FSI/PDI wrapping of
+Urdu runs described above; the per-string approach itself, and the decision not to use `forceRTL`,
+are unchanged.

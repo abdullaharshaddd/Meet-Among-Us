@@ -8,10 +8,10 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { Screen, Text, Mono, Urdu, Card, Button, AudioLevelMeter } from "@/components";
-import { findPassage, passageNumber, passages } from "@/lib/enrollmentPassages";
+import { findPassage, minSpeechSeconds, passageNumber, passages } from "@/lib/enrollmentPassages";
 import { enrollmentRecordingOptions, formatSeconds, meteringToLevel } from "@/lib/recording";
 import { useEnrollmentDraftStore } from "@/store/enrollmentDraftStore";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 const SAVE_ERROR = "The recording could not be saved. Please record this passage again.";
 
@@ -74,6 +74,7 @@ export default function RecordPassageScreen() {
   };
 
   const isRecording = recorderState.isRecording;
+  const reachedTarget = recorderState.durationMillis >= minSpeechSeconds * 1000;
 
   return (
     <Screen style={{ gap: space.lg }}>
@@ -90,7 +91,14 @@ export default function RecordPassageScreen() {
 
       <View style={{ gap: space.sm }}>
         <AudioLevelMeter level={meteringToLevel(recorderState.metering)} state={isRecording ? "capturing" : "idle"} />
-        <Mono tone={isRecording ? "recording" : "secondary"}>{formatSeconds(recorderState.durationMillis)}</Mono>
+        <Mono tone={reachedTarget ? "success" : isRecording ? "recording" : "secondary"}>
+          {formatSeconds(recorderState.durationMillis)} / {minSpeechSeconds.toFixed(1)}s
+        </Mono>
+        <Text variant="body" tone={reachedTarget ? "success" : "secondary"}>
+          {reachedTarget
+            ? "Long enough. Finish the passage, then stop."
+            : `Keep reading until at least ${minSpeechSeconds} seconds.`}
+        </Text>
       </View>
 
       {errorMessage && <Text variant="body" tone="danger">{errorMessage}</Text>}

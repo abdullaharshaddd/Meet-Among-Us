@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from "@react-native-google-signin/google-signin";
 import { GOOGLE_CLIENT_ID_WEB } from "@/config/env";
 import { useGoogleSignIn } from "@/api/auth";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 import { Button } from "./Button";
 import { Text } from "./Text";
 

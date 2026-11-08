@@ -1,5 +1,5 @@
 import { Text as RNText, type TextProps as RNTextProps } from "react-native";
-import { colors, fonts, type } from "@/theme/tokens";
+import { colors, fonts, type } from "@/theme/legacy";
 
 type Variant = keyof typeof type;
 type Tone =
@@ -52,6 +52,7 @@ export function Text({ variant = "body", tone = "primary", style, ...props }: Te
           fontFamily: fonts[step.weight],
           fontSize: step.size,
           lineHeight: step.lineHeight,
+          letterSpacing: step.tracking,
           color: toneColor(tone),
         },
         style,

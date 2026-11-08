@@ -3,7 +3,7 @@ import { Linking, Platform, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { Screen, Text, Button } from "@/components";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function MicrophonePermissionScreen() {
   const { language } = useLocalSearchParams<{ language: string }>();

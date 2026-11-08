@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 import { Button } from "./Button";
 import { Text } from "./Text";
 

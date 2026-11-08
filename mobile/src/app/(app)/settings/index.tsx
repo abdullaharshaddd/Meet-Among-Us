@@ -5,7 +5,7 @@ import { Screen, Text, Avatar, Button, Card } from "@/components";
 import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/api/auth";
 import { useEnrollmentStatus, useResetEnrollment } from "@/api/enrollment";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -61,6 +61,8 @@ export default function SettingsScreen() {
       )}
 
       <Button label="Sign out" variant="secondary" onPress={logout} />
+
+      {__DEV__ && <Button label="Design system (dev only)" variant="ghost" onPress={() => router.push("/design-system")} />}
     </Screen>
   );
 }

@@ -4,7 +4,7 @@ import { Screen, Text, TextField, Button, GoogleSignInButton } from "@/component
 import { useValidatedField, validators } from "@/hooks/useValidatedField";
 import { useLogin } from "@/api/auth";
 import { loginErrorMessage } from "@/api/authErrors";
-import { colors, space } from "@/theme/tokens";
+import { colors, space } from "@/theme/legacy";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -68,6 +68,8 @@ export default function LoginScreen() {
           Don't have an account? <Text variant="bodyStrong" tone="accent">Create one</Text>
         </Text>
       </Pressable>
+
+      {__DEV__ && <Button label="Design system (dev only)" variant="ghost" onPress={() => router.push("/design-system")} />}
     </Screen>
   );
 }

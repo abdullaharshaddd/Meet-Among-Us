@@ -1,5 +1,5 @@
 import { View, type ViewProps } from "react-native";
-import { elevation, radii, space } from "@/theme/tokens";
+import { elevation, radii, space } from "@/theme/legacy";
 
 export interface CardProps extends ViewProps {
   level?: 1 | 2;

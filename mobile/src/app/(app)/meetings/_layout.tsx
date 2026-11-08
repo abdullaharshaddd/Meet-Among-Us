@@ -1,5 +1,8 @@
 import { Stack } from "expo-router";
+import { useTheme } from "@/theme/ThemeProvider";
 
 export default function MeetingsLayout() {
-  return <Stack />;
+  const { colors } = useTheme();
+
+  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />;
 }

@@ -11,7 +11,7 @@ import {
 } from "@/api/enrollment";
 import { findPassage, passageNumber, passages } from "@/lib/enrollmentPassages";
 import { useEnrollmentDraftStore } from "@/store/enrollmentDraftStore";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 type Phase = "sending" | "failed" | "done";
 

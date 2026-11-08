@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { colors } from "@/theme/tokens";
+import { colors } from "@/theme/legacy";
 
 type MeterState = "idle" | "capturing" | "paused";
 

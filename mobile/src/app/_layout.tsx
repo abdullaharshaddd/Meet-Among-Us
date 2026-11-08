@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
+import { Platform, View } from "react-native";
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAppFonts } from "@/theme/fonts";
+import { ToastProvider } from "@/components/ui";
+import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
+import { useThemeStore } from "@/theme/themeStore";
+import { borders, sizes } from "@/theme/tokens";
 import { useAuthStore } from "@/store/authStore";
 
 // Held open until fonts AND the stored session resolve, so nothing ever
@@ -21,6 +27,7 @@ export default function RootLayout() {
     if (!hydrationStarted) {
       setHydrationStarted(true);
       useAuthStore.getState().hydrate();
+      useThemeStore.getState().hydrate();
     }
   }, [hydrationStarted]);
 
@@ -39,8 +46,40 @@ export default function RootLayout() {
   // No auth-guard logic here — that lives in (app)/_layout.tsx, one level
   // down, so this stays a plain provider shell.
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <PhoneFrame>
+            <ToastProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+            </ToastProvider>
+          </PhoneFrame>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+// On the web the app is a phone-width column with the canvas color around it. Phones are untouched.
+function PhoneFrame({ children }: { children: React.ReactNode }) {
+  const { colors } = useTheme();
+
+  if (Platform.OS !== "web") return <>{children}</>;
+
+  return (
+    <View style={{ flex: 1, alignItems: "center", backgroundColor: colors.canvas }}>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          maxWidth: sizes.screenMaxWidth,
+          borderLeftWidth: borders.hairline,
+          borderRightWidth: borders.hairline,
+          borderColor: colors.border,
+        }}
+      >
+        {children}
+      </View>
+    </View>
   );
 }

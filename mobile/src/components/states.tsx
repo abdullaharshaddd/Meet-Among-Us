@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
-import { colors, radii, space } from "@/theme/tokens";
+import { colors, radii, space } from "@/theme/legacy";
 import { Text } from "./Text";
 import { Button } from "./Button";
 

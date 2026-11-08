@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from "react-native";
-import { borders, colors, radii, space, touch } from "@/theme/tokens";
+import { borders, colors, radii, space, touch } from "@/theme/legacy";
 import { Text } from "./Text";
 
 type Variant = "primary" | "secondary" | "ghost" | "destructive";
@@ -20,7 +20,7 @@ const FILLS: Record<Variant, { bg: string; bgPressed: string; border?: string; t
     text: colors.text.primary,
   },
   ghost: { bg: "transparent", bgPressed: colors.bg.surface, text: colors.text.primary },
-  destructive: { bg: colors.state.danger, bgPressed: "#B62822", text: colors.text.primary },
+  destructive: { bg: colors.destructive.fill, bgPressed: colors.destructive.pressed, text: colors.destructive.text },
 };
 
 // Buttons name the action ("Create account"), never "Submit" — enforced by

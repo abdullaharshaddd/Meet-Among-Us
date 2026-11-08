@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Screen, Text, Card, Button, ErrorState, LoadingState } from "@/components";
 import { useEnrollmentStatus } from "@/api/enrollment";
 import { passages } from "@/lib/enrollmentPassages";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function EnrollIntroScreen() {
   const router = useRouter();

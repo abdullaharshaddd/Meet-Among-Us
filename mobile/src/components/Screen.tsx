@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, type ViewProps } from "react-native";
-import { colors, space } from "@/theme/tokens";
+import { colors, space } from "@/theme/legacy";
 
 // Every screen's canvas background + safe-area + padding, in one place
 // instead of the same three style lines repeated per screen.

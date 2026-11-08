@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 import { Screen, Text, Button } from "@/components";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function EnrollmentDoneScreen() {
   const router = useRouter();

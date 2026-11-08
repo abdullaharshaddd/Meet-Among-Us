@@ -1,5 +1,5 @@
 import { View, StyleSheet } from "react-native";
-import { colors, radii, space } from "@/theme/tokens";
+import { colors, radii, space } from "@/theme/legacy";
 import { Text } from "./Text";
 
 type Variant = "neutral" | "accent" | "recording" | "uploading" | "success" | "warning";

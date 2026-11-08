@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextInput, View, StyleSheet, type TextInputProps } from "react-native";
-import { borders, colors, fonts, radii, space, touch, type } from "@/theme/tokens";
+import { borders, colors, fonts, radii, space, touch, type } from "@/theme/legacy";
 import { Text } from "./Text";
 
 export interface TextFieldProps extends Omit<TextInputProps, "style"> {

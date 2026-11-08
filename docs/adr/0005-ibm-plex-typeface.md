@@ -1,3 +1,5 @@
+> **Status: superseded by [ADR-0024](0024-field-recorder-visual-identity.md).** IBM Plex is replaced by Instrument Serif, Instrument Sans and Geist Mono.
+
 # 0005 — IBM Plex Sans replaces General Sans as the UI typeface
 
 ## Context

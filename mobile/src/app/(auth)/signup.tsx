@@ -4,7 +4,7 @@ import { Screen, Text, TextField, Button } from "@/components";
 import { useValidatedField, validators } from "@/hooks/useValidatedField";
 import { useSignup } from "@/api/auth";
 import { signupErrorMessage } from "@/api/authErrors";
-import { space } from "@/theme/tokens";
+import { space } from "@/theme/legacy";
 
 export default function SignupScreen() {
   const router = useRouter();
