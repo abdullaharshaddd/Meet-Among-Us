@@ -130,7 +130,7 @@ Settled. Each has a reason.
 
 ## 5. Terminology — this matters
 
-- **Guest** = a real, named external person invited to one meeting. No account, no voiceprint, no device, no recording track. Pre-declared by the host so their name appears in the transcript rename dropdown. Their voice arrives as bleed on other people's mics.
+- **Guest** = a real, named external person invited to one meeting. No account, no voiceprint, no device, no recording track. Declared by the host, or named when renaming an Unknown Speaker, so their name appears in the transcript rename dropdown. Their voice arrives as bleed on other people's mics.
 - **Unknown Speaker N** = a transcript segment whose speaker embedding fell below the match threshold. A *label*, not a person.
 
 These are different concepts and the earlier spec conflated them. Never use "Guest N" for an unmatched segment — not in code, not in the database, not in UI copy.
@@ -139,7 +139,7 @@ These are different concepts and the earlier spec conflated them. Never use "Gue
 
 ## 6. Design system
 
-Dark mode only. Canvas `#0D1117`, accent teal `#14B8A6`. IBM Plex Sans for UI text, IBM Plex Mono for numerics and timestamps, Noto Nastaliq Urdu for RTL Urdu segments — see `docs/adr/0005-ibm-plex-typeface.md` for why this replaced the original General Sans/Satoshi choice. Full tokens, and the shared component set (Button, TextField, Card, Avatar, Badge, states, and the signature `AudioLevelMeter`), live in `mobile/src/theme/` and `mobile/src/components/`.
+"Field Recorder" identity (see `docs/adr/0024-field-recorder-visual-identity.md`, which replaced the teal palette and IBM Plex). Paper (light) and Studio (dark) themes follow the system setting. Warm neutrals, ink-filled primary buttons, and a single orange `signal` colour reserved for recording and live states. Instrument Serif for display headings (24 pt and up), Instrument Sans for UI text, Geist Mono for labels, numerics and timestamps, Noto Nastaliq Urdu for RTL Urdu segments. Full tokens, and the shared component set, live in `mobile/src/theme/` and `mobile/src/components/ui/`.
 
 ---
 

@@ -89,6 +89,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/enrollment/passages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Passages */
+        get: operations["get_passages_enrollment_passages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/enrollment/uploads": {
         parameters: {
             query?: never;
@@ -157,15 +174,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/dev/enroll/api/samples": {
+    "/workspaces": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Sample Measurements */
-        get: operations["sample_measurements_dev_enroll_api_samples_get"];
+        /** List Workspaces */
+        get: operations["list_workspaces_workspaces_get"];
+        put?: never;
+        /** Create Workspace */
+        post: operations["create_workspace_workspaces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/join-by-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Join By Code */
+        post: operations["join_by_code_workspaces_join_by_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Workspace */
+        get: operations["get_workspace_workspaces__workspace_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -174,34 +226,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/dev/enroll/api/diagnostics": {
+    "/workspaces/{workspace_id}/uploads": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Diagnostics */
-        get: operations["diagnostics_dev_enroll_api_diagnostics_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Create Clip Upload Url */
+        post: operations["create_clip_upload_url_workspaces__workspace_id__uploads_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/dev/enroll/api/admin/users": {
+    "/workspaces/{workspace_id}/identify": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Admin Users */
-        get: operations["admin_users_dev_enroll_api_admin_users_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Identify Speakers */
+        post: operations["identify_speakers_workspaces__workspace_id__identify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -229,37 +281,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AdminUserRow */
-        AdminUserRow: {
-            /** Email */
-            email: string;
-            /** Display Name */
-            display_name: string;
-            /** Enrollment Status */
-            enrollment_status: string;
-            /** Accepted Sample Count */
-            accepted_sample_count: number;
-            /** Total Sample Count */
-            total_sample_count: number;
-            /** Intra Speaker Variance */
-            intra_speaker_variance: number | null;
-            /** Centroid L2 Norm */
-            centroid_l2_norm: number | null;
+        /** ClipUploadRequest */
+        ClipUploadRequest: {
+            /**
+             * Audio Format
+             * @default m4a
+             * @enum {string}
+             */
+            audio_format: "flac" | "wav" | "m4a" | "webm";
         };
-        /** DiagnosticsResponse */
-        DiagnosticsResponse: {
-            /** Centroid L2 Norm */
-            centroid_l2_norm: number;
-            /** Intra Speaker Variance */
-            intra_speaker_variance: number;
-            /** Sample Count */
-            sample_count: number;
-            /** Model Version */
-            model_version: string;
-            /** Per Passage Similarity */
-            per_passage_similarity: components["schemas"]["PerPassageSimilarity"][];
-            /** Cross Language Similarity En Ur */
-            cross_language_similarity_en_ur: number | null;
+        /** CreateWorkspaceRequest */
+        CreateWorkspaceRequest: {
+            /** Name */
+            name: string;
         };
         /**
          * EnrollmentLanguage
@@ -298,12 +332,49 @@ export interface components {
             /** Db */
             db: string;
         };
+        /** IdentifyRequest */
+        IdentifyRequest: {
+            /** Audio Key */
+            audio_key: string;
+        };
+        /** IdentifyResponse */
+        IdentifyResponse: {
+            /** Model Version */
+            model_version: string;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Turns */
+            turns: components["schemas"]["SpeakerTurn"][];
+            /** Skipped Voiceprints */
+            skipped_voiceprints: components["schemas"]["SkippedVoiceprint"][];
+        };
+        /** JoinByCodeRequest */
+        JoinByCodeRequest: {
+            /** Code */
+            code: string;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Email */
             email: string;
             /** Password */
             password: string;
+        };
+        /** PassageContent */
+        PassageContent: {
+            language: components["schemas"]["EnrollmentLanguage"];
+            /** Title */
+            title: string;
+            /** Is Urdu */
+            is_urdu: boolean;
+            /** Text */
+            text: string;
+            /** Transliteration */
+            transliteration: string | null;
+            /** Meaning */
+            meaning: string | null;
+            /** Notes */
+            notes: string;
         };
         /** PassageStatus */
         PassageStatus: {
@@ -315,32 +386,17 @@ export interface components {
             /** Reason Message */
             reason_message: string | null;
         };
-        /** PerPassageSimilarity */
-        PerPassageSimilarity: {
-            /** Language */
-            language: string;
-            /** Similarity To Centroid */
-            similarity_to_centroid: number;
+        /** PassagesResponse */
+        PassagesResponse: {
+            /** Min Speech Seconds */
+            min_speech_seconds: number;
+            /** Passages */
+            passages: components["schemas"]["PassageContent"][];
         };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
-        };
-        /** SampleMeasurement */
-        SampleMeasurement: {
-            /** Language */
-            language: string;
-            /** Accepted */
-            accepted: boolean;
-            /** Reason Code */
-            reason_code: string | null;
-            /** Duration Sec */
-            duration_sec: number;
-            /** Speech Duration Sec */
-            speech_duration_sec: number;
-            /** Snr Db */
-            snr_db: number;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -350,6 +406,45 @@ export interface components {
             password: string;
             /** Display Name */
             display_name: string;
+        };
+        /** SkippedVoiceprint */
+        SkippedVoiceprint: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Model Version */
+            model_version: string;
+            /** Reason */
+            reason: string;
+        };
+        /** SpeakerTurn */
+        SpeakerTurn: {
+            /** Speaker Label */
+            speaker_label: string;
+            /** User Id */
+            user_id: string | null;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Best Candidate Name */
+            best_candidate_name: string | null;
+            /** Best Score */
+            best_score: number | null;
+            /** Runner Up Name */
+            runner_up_name: string | null;
+            /** Runner Up Score */
+            runner_up_score: number | null;
+            /** Margin */
+            margin: number | null;
+            /** Pooled Seconds */
+            pooled_seconds: number;
+            /** Floor Applied */
+            floor_applied: number;
         };
         /** SubmitSampleRequest */
         SubmitSampleRequest: {
@@ -432,6 +527,38 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** WorkspaceResponse */
+        WorkspaceResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Owner User Id
+             * Format: uuid
+             */
+            owner_user_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            my_role: components["schemas"]["WorkspaceRole"];
+            /** Can Create Projects */
+            can_create_projects: boolean;
+            /** Join Code */
+            join_code: string | null;
+            /** Code Joining Enabled */
+            code_joining_enabled: boolean;
+        };
+        /**
+         * WorkspaceRole
+         * @enum {string}
+         */
+        WorkspaceRole: "owner" | "admin" | "member";
     };
     responses: never;
     parameters: never;
@@ -604,6 +731,26 @@ export interface operations {
             };
         };
     };
+    get_passages_enrollment_passages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PassagesResponse"];
+                };
+            };
+        };
+    };
     create_upload_url_enrollment_uploads_post: {
         parameters: {
             query?: never;
@@ -708,7 +855,7 @@ export interface operations {
             };
         };
     };
-    sample_measurements_dev_enroll_api_samples_get: {
+    list_workspaces_workspaces_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -723,36 +870,84 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SampleMeasurement"][];
+                    "application/json": components["schemas"]["WorkspaceResponse"][];
                 };
             };
         };
     };
-    diagnostics_dev_enroll_api_diagnostics_get: {
+    create_workspace_workspaces_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkspaceRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DiagnosticsResponse"];
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    admin_users_dev_enroll_api_admin_users_get: {
+    join_by_code_workspaces_join_by_code_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinByCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_workspace_workspaces__workspace_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -763,7 +958,86 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdminUserRow"][];
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_clip_upload_url_workspaces__workspace_id__uploads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClipUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identify_speakers_workspaces__workspace_id__identify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentifyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -63,3 +63,13 @@ motion-sensitive user still sees "audio is active" without any animation running
   updates the `level` prop, not the render cost of the meter itself.
 - The component has no opinion on where samples come from; wiring a real mic callback is Phase 4
   (enrollment) / Milestone 2 (recording) scope, not this task's.
+
+## Amendment (ADR-0024, Field Recorder restyle)
+
+The logic above is unchanged: the same ring buffer, 30 fps cap, UI-thread worklets and
+deterministic reduced-motion shape. Only the look changed. Bars are 3 pt wide with a 2 pt gap and
+are drawn from a hairline baseline. History bars are `ink` with amplitude as opacity. The newest
+bar, on the right, is the `signal` orange; when its level passes -3 dBFS (0.95 on the meter's
+-60..0 scale, `ratios.peakLevel`) it turns `danger` for that one step. This replaces the amber
+clip tick, and the 0.98 clip threshold with it. The component moved to
+`mobile/src/components/ui/AudioLevelMeter.tsx`.

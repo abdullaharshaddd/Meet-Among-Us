@@ -1,4 +1,5 @@
 import type { EnrollmentLanguage } from "@/api/enrollment";
+import { generatedPassages, minSpeechSeconds } from "./enrollmentPassages.gen";
 
 export type Passage = {
   language: EnrollmentLanguage;
@@ -7,28 +8,12 @@ export type Passage = {
   isUrdu: boolean;
 };
 
-// Same text as docs/ENROLLMENT_PASSAGES.md. The order here is the order the
-// user records them in.
-export const passages: Passage[] = [
-  {
-    language: "en",
-    title: "English",
-    text: "Most mornings I like to take a slow walk before the city gets loud, just to clear my head and notice how the light changes along the way.",
-    isUrdu: false,
-  },
-  {
-    language: "ur",
-    title: "Urdu",
-    text: "مجھے صبح کی چائے کے بغیر دن شروع ہی نہیں لگتا، چاہے کام کتنا بھی زیادہ ہو، تھوڑی دیر سکون سے بیٹھ کر چائے ضرور پیتا ہوں۔",
-    isUrdu: true,
-  },
-  {
-    language: "mixed",
-    title: "Code-switched",
-    text: "یار، deadline زیادہ دور نہیں، لیکن client سے requirements ابھی تک clear نہیں ہوئی، اس لیے میں پہلے ایک quick call schedule کرنا چاہتا ہوں تاکہ confusion نہ رہے۔",
-    isUrdu: true,
-  },
-];
+// The text and the speech minimum are generated from the backend's one copy
+// (backend/app/content/enrollment_passages.json). Run `npm run generate:passages`
+// after it changes. The order is the order the user records them in.
+export const passages: Passage[] = generatedPassages;
+
+export { minSpeechSeconds };
 
 export function findPassage(language: string | undefined): Passage | undefined {
   return passages.find((passage) => passage.language === language);
