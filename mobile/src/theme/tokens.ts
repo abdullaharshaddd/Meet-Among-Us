@@ -211,6 +211,7 @@ export const sizes = {
   headerBar: 52,
   pillHeight: 56,
   skeletonCard: 112,
+  composerMax: 120,
 } as const;
 
 // Ratios of the window, for things that scale with the screen.

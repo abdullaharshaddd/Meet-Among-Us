@@ -69,14 +69,14 @@ const ROUTES = [
   { name: "meeting-detail-transcript", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, wait: 400 },
   { name: "meeting-citation-jump", path: "/meetings", open: /Sprint sync/, then: { text: "Sprint sync · 03:24" }, wait: 900 },
   { name: "meeting-rename-sheet", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, click: { label: /Unknown Speaker 1/ } },
-  { name: "assistant", path: "/assistant" },
-  { name: "assistant-chat", path: "/assistant", type: "Create a task from the vendor call", wait: 2200 },
-  { name: "tasks", path: "/tasks" },
-  { name: "settings", path: "/settings" },
-  { name: "enroll-intro", path: "/enroll", enrolled: false },
-  { name: "workspaces-create", path: "/workspaces/create" },
-  { name: "workspaces-join", path: "/workspaces/join" },
-  { name: "workspaces-members", path: "/workspaces/members" },
+  { name: "assistant", nav: [{ tab: "Assistant" }] },
+  { name: "assistant-chat", nav: [{ tab: "Assistant" }], type: "Create a task from the vendor call", wait: 2200 },
+  { name: "tasks", nav: [{ tab: "Tasks" }] },
+  { name: "settings", nav: [{ tab: "Settings" }] },
+  { name: "enroll-intro", enrolled: false, nav: [{ button: /Continue enrollment/ }] },
+  { name: "workspaces-create", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Create a workspace" }] },
+  { name: "workspaces-join", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Join with a code" }] },
+  { name: "workspaces-members", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Members" }] },
 ];
 
 function mockApi(context, enrollment) {
@@ -149,7 +149,13 @@ async function run() {
           await page.waitForTimeout(1500);
         } else {
           await signIn(page);
-          await goTo(page, route.path);
+          if (route.path) await goTo(page, route.path);
+
+          for (const step of route.nav ?? []) {
+            const target = step.tab ? page.getByRole("tab", { name: step.tab }) : page.getByRole("button", { name: step.button });
+            await target.first().click();
+            await page.waitForTimeout(1300);
+          }
         }
 
         // Pages with a dynamic id are reached by tapping, the way a person would.
@@ -172,7 +178,7 @@ async function run() {
         }
         if (route.type) {
           await page.getByRole("textbox").last().fill(route.type);
-          await page.keyboard.press("Enter");
+          await page.getByRole("button", { name: "Send" }).click();
         }
         if (route.wait) await page.waitForTimeout(route.wait);
         if (route.scrollBy) await scrollMain(page, route.scrollBy);
