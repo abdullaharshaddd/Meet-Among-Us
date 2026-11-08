@@ -77,6 +77,9 @@ const ROUTES = [
   { name: "tasks-new", nav: [{ tab: "Tasks" }, { button: "New task" }] },
   { name: "settings", nav: [{ tab: "Settings" }] },
   { name: "enroll-intro", enrolled: false, nav: [{ button: /Continue enrollment/ }] },
+  { name: "enroll-permission", enrolled: false, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }] },
+  { name: "enroll-record", enrolled: false, mic: true, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }], wait: 1200 },
+  { name: "enroll-recording", enrolled: false, mic: true, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }, { button: "Start recording" }], wait: 2500 },
   { name: "workspaces-create", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Create a workspace" }] },
   { name: "workspaces-join", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Join with a code" }] },
   { name: "workspaces-members", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Members" }] },
@@ -129,13 +132,13 @@ async function scrollMain(page, by) {
 
 async function run() {
   mkdirSync(OUT, { recursive: true });
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] });
 
   for (const scheme of ["light", "dark"]) {
     const label = scheme === "light" ? "paper" : "studio";
 
     for (const route of ROUTES.filter((item) => !FILTER || item.name.includes(FILTER))) {
-      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: scheme, deviceScaleFactor: 1 });
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: scheme, deviceScaleFactor: 1, permissions: route.mic ? ["microphone"] : [] });
       const page = await context.newPage();
       page.on("pageerror", (error) => console.log(`  [${label}/${route.name}] page error: ${error.message}`));
       page.on("console", (message) => {

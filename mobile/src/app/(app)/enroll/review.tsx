@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { Screen, Text, Button } from "@/components";
+import { BilingualText, BottomDock, Button, CircleButton, Header, Screen, Text } from "@/components/ui";
 import { findPassage } from "@/lib/enrollmentPassages";
 import { useEnrollmentDraftStore } from "@/store/enrollmentDraftStore";
-import { space } from "@/theme/legacy";
+import { layout, space } from "@/theme/tokens";
 
 export default function ReviewRecordingScreen() {
   const router = useRouter();
@@ -46,20 +46,31 @@ export default function ReviewRecordingScreen() {
   };
 
   return (
-    <Screen style={{ gap: space.lg }}>
-      <Text variant="title">Listen back</Text>
-      <Text variant="body" tone="secondary">
-        Check that your voice is clear and you read the whole {passage.title} passage. You can record it again if not.
-      </Text>
+    <Screen>
+      <Header onBack={recordAgain} />
 
-      <Button label={playerStatus.playing ? "Pause" : "Play recording"} variant="secondary" onPress={togglePlayback} />
-
-      <View style={{ flex: 1 }} />
-
-      <View style={{ gap: space.sm }}>
-        <Button label="Use this recording" onPress={useRecording} />
-        <Button label="Record again" variant="secondary" onPress={recordAgain} />
+      <View style={{ flex: 1, paddingHorizontal: layout.screenGutter, paddingTop: space.lg, gap: space.lg }}>
+        <BilingualText variant="displayLg">Listen back</BilingualText>
+        <Text variant="body" tone="secondary">
+          Check that your voice is clear and you read the whole {passage.title} passage. You can record it again if not.
+        </Text>
       </View>
+
+      <BottomDock aboveTabBar={false}>
+        <View style={{ gap: space.sm }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.lg }}>
+            <CircleButton
+              icon={playerStatus.playing ? "pause" : "play"}
+              label={playerStatus.playing ? "Pause" : "Replay"}
+              onPress={togglePlayback}
+            />
+            <View style={{ flex: 1 }}>
+              <Button label="Use this recording" size="dock" onPress={useRecording} />
+            </View>
+          </View>
+          <Button label="Record again" variant="ghost" onPress={recordAgain} />
+        </View>
+      </BottomDock>
     </Screen>
   );
 }
