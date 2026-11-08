@@ -77,6 +77,8 @@ const ROUTES = [
   { name: "tasks-done", nav: [{ tab: "Tasks" }, { button: "Done" }] },
   { name: "tasks-new", nav: [{ tab: "Tasks" }, { button: "New task" }] },
   { name: "settings", nav: [{ tab: "Settings" }] },
+  { name: "settings-signout", nav: [{ tab: "Settings" }, { button: "Sign out" }] },
+  { name: "settings-scrolled", nav: [{ tab: "Settings" }], scrollBy: 1200 },
   { name: "enroll-intro", enrolled: false, nav: [{ button: /Continue enrollment/ }] },
   { name: "enroll-permission", enrolled: false, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }] },
   { name: "enroll-record", enrolled: false, mic: true, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }], wait: 1200 },
@@ -129,7 +131,7 @@ async function scrollMain(page, by) {
   await page.evaluate((distance) => {
     const scrollers = [...document.querySelectorAll("*")].filter((el) => el.scrollHeight > el.clientHeight + 20 && getComputedStyle(el).overflowY !== "visible");
     scrollers.sort((a, b) => b.scrollHeight - a.scrollHeight);
-    if (scrollers[0]) scrollers[0].scrollBy(0, distance);
+    for (const scroller of scrollers) scroller.scrollBy(0, distance);
   }, by);
   await page.waitForTimeout(500);
 }
