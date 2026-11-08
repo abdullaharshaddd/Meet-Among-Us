@@ -346,7 +346,7 @@ export default function MeetingDetailScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Ask about this meeting"
-          onPress={() => router.push({ pathname: "/(app)/assistant/index", params: { scope: meeting.id } })}
+          onPress={() => router.push({ pathname: "/(app)/assistant", params: { scope: meeting.id } })}
           style={{
             height: sizes.dockHeight,
             flexDirection: "row",
