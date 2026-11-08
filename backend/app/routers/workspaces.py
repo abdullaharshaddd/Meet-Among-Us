@@ -6,8 +6,11 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
+from app.schemas.enrollment import UploadUrlResponse
+from app.schemas.speaker_id import ClipUploadRequest, IdentifyRequest, IdentifyResponse
+from app.schemas.transcript import TranscribeRequest, TranscribeResponse
 from app.schemas.workspace import CreateWorkspaceRequest, JoinByCodeRequest, WorkspaceResponse
-from app.services import workspace_service
+from app.services import speaker_id_service, transcript_service, workspace_service
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
@@ -38,3 +41,33 @@ def get_workspace(
     workspace_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> WorkspaceResponse:
     return workspace_service.get_workspace(db, user, workspace_id)
+
+
+@router.post("/{workspace_id}/uploads", response_model=UploadUrlResponse)
+def create_clip_upload_url(
+    workspace_id: UUID,
+    payload: ClipUploadRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UploadUrlResponse:
+    return speaker_id_service.create_clip_upload_url(db, user, workspace_id, payload.audio_format)
+
+
+@router.post("/{workspace_id}/identify", response_model=IdentifyResponse)
+def identify_speakers(
+    workspace_id: UUID,
+    payload: IdentifyRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> IdentifyResponse:
+    return speaker_id_service.identify(db, user, workspace_id, payload.audio_key)
+
+
+@router.post("/{workspace_id}/transcribe", response_model=TranscribeResponse)
+def transcribe_clip(
+    workspace_id: UUID,
+    payload: TranscribeRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> TranscribeResponse:
+    return transcript_service.transcribe(db, user, workspace_id, payload.audio_key, payload.engine)

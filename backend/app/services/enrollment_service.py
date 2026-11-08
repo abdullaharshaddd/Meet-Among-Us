@@ -11,12 +11,12 @@ ml/ml/quality.py stubbing `quality.vad`.
 
 from __future__ import annotations
 
-import math
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core import ml_client, storage
+from app.core import enrollment_content, ml_client, storage
+from app.core.vectors import cosine_similarity, normalise
 from app.core.exceptions import EnrollmentAlreadyCompleteError
 from app.models.enrollment_sample import EnrollmentLanguage, EnrollmentSample
 from app.models.user import EnrollmentStatus, User
@@ -28,13 +28,12 @@ from app.schemas.enrollment import (
     UploadUrlResponse,
 )
 
-MODEL_VERSION = "ecapa-voxceleb-v1"
 UPLOAD_URL_EXPIRES_IN_SECONDS = 900
 
 # audio_format -> R2 Content-Type. A presigned PUT that specifies ContentType binds
 # it into the signature (a well-known S3/R2 gotcha), so the caller's declared format
 # must match the bytes it actually uploads or R2 rejects the PUT outright.
-_CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav", "m4a": "audio/mp4", "webm": "audio/webm"}
+CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav", "m4a": "audio/mp4", "webm": "audio/webm"}
 
 # A passage rejected this many times in a row, with no acceptance since, flips
 # enrollment_status to 'failed' — a UX signal to stop retrying blindly and show
@@ -51,13 +50,18 @@ CONSECUTIVE_REJECTION_LIMIT = 3
 REJECTION_MESSAGES: dict[str, str] = {
     "NEAR_SILENT": "We couldn't hear anything — check your mic and try again.",
     "CLIPPED": "Your voice was too loud for the mic — move back a little.",
-    "SPEECH_TOO_SHORT": "We only caught {speech_duration_sec:.1f} seconds of speech — read the whole passage.",
+    "SPEECH_TOO_SHORT": (
+        "We only caught {speech_duration_sec:.1f} seconds of speech and need at least {min_speech_seconds:.0f}. "
+        "Keep reading until the end of the passage."
+    ),
     "TOO_NOISY": "Too much background noise — try a quieter room.",
 }
 
 
 def _reason_message(reason_code: str, speech_duration_sec: float) -> str:
-    return REJECTION_MESSAGES[reason_code].format(speech_duration_sec=speech_duration_sec)
+    return REJECTION_MESSAGES[reason_code].format(
+        speech_duration_sec=speech_duration_sec, min_speech_seconds=enrollment_content.min_speech_seconds()
+    )
 
 
 def create_upload_url(
@@ -67,7 +71,7 @@ def create_upload_url(
     audio_key = f"enrollment/{user.id}/{language.value}/{uuid4()}.{audio_format}"
     upload_url = storage.presign_put(
         audio_key,
-        content_type=_CONTENT_TYPES[audio_format],
+        content_type=CONTENT_TYPES[audio_format],
         expires_in=UPLOAD_URL_EXPIRES_IN_SECONDS,
     )
     return UploadUrlResponse(
@@ -84,7 +88,7 @@ def submit_sample(
         )
 
     audio_bytes = storage.get_object_bytes(audio_key)
-    result = ml_client.embed_sample(audio_bytes)
+    result = ml_client.embed_sample(audio_bytes, enrollment_content.min_speech_seconds())
 
     enrollment_sample_repository.create(
         db,
@@ -116,7 +120,7 @@ def submit_sample(
                 centroid=centroid,
                 intra_speaker_variance=variance,
                 sample_count=len(accepted),
-                model_version=MODEL_VERSION,
+                model_version=result.model_version,
             )
             user = user_repository.set_enrollment_status(db, user, EnrollmentStatus.COMPLETE)
         elif user.enrollment_status == EnrollmentStatus.FAILED:
@@ -196,23 +200,41 @@ def _latest_accepted_per_language(
 
 
 def _compute_centroid(embeddings: list[list[float]]) -> tuple[list[float], float]:
-    """L2-normalised mean, plus the mean pairwise cosine distance across the
-    inputs as an empirical spread measurement (ADR-0012). Plain Python, not
-    numpy — three 192-dim vectors is nowhere near where that trade pays off, and
-    the backend has no other use for a numpy dependency."""
-    dim = len(embeddings[0])
-    mean = [sum(vector[i] for vector in embeddings) / len(embeddings) for i in range(dim)]
-    norm = math.sqrt(sum(x * x for x in mean))
-    centroid = [x / norm for x in mean] if norm > 0 else mean
+    # Each embedding is normalised before averaging so one recording with a longer raw
+    # vector can't pull the mean toward itself. See ADR-0020.
+    unit_vectors = [normalise(vector) for vector in embeddings]
+    dim = len(unit_vectors[0])
+    mean = [sum(vector[i] for vector in unit_vectors) / len(unit_vectors) for i in range(dim)]
+    centroid = normalise(mean)
 
-    def cosine_distance(a: list[float], b: list[float]) -> float:
-        dot = sum(x * y for x, y in zip(a, b))
-        norm_a = math.sqrt(sum(x * x for x in a))
-        norm_b = math.sqrt(sum(y * y for y in b))
-        if norm_a == 0 or norm_b == 0:
-            return 1.0
-        return 1 - dot / (norm_a * norm_b)
+    pairs = [(i, j) for i in range(len(unit_vectors)) for j in range(i + 1, len(unit_vectors))]
+    variance = sum(
+        1 - cosine_similarity(unit_vectors[i], unit_vectors[j]) for i, j in pairs
+    ) / len(pairs)
 
-    pairs = [(i, j) for i in range(len(embeddings)) for j in range(i + 1, len(embeddings))]
-    variance = sum(cosine_distance(embeddings[i], embeddings[j]) for i, j in pairs) / len(pairs)
     return centroid, variance
+
+
+def rebuild_centroid(db: Session, user_id: UUID) -> tuple[list[float], list[float]] | None:
+    """Recomputes a stored voiceprint from its enrollment samples. Returns (old, new)
+    centroids, or None if the user has no complete voiceprint to rebuild."""
+    voiceprint = voiceprint_repository.get_by_user_id(db, user_id)
+
+    if voiceprint is None:
+        return None
+
+    samples = enrollment_sample_repository.list_by_user_desc(db, user_id)
+    accepted = _latest_accepted_per_language(samples)
+    old_centroid = list(voiceprint.centroid)
+    new_centroid, variance = _compute_centroid([sample.embedding for sample in accepted.values()])
+
+    voiceprint_repository.upsert(
+        db,
+        user_id=user_id,
+        centroid=new_centroid,
+        intra_speaker_variance=variance,
+        sample_count=len(accepted),
+        model_version=voiceprint.model_version,
+    )
+
+    return old_centroid, new_centroid

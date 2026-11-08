@@ -36,8 +36,10 @@ if settings.dev_tools_enabled:
     # branch, not just the mount, so a prod deploy that leaves the flag unset
     # never defines these routes at all, rather than merely hiding them.
     from app.routers.dev_enroll import router as dev_enroll_router
+    from app.routers.dev_transcribe import router as dev_transcribe_router
 
     app.include_router(dev_enroll_router)
+    app.include_router(dev_transcribe_router)
 
 
 @app.exception_handler(AppError)

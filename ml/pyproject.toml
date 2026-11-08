@@ -13,6 +13,7 @@ dependencies = [
     "silero-vad>=5.1",
     "soundfile>=0.12",
     "numpy>=1.26",
+    "requests>=2.32",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
 ]

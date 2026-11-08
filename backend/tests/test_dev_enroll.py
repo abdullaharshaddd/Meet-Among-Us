@@ -28,6 +28,7 @@ def _accepted(embedding: list[float]) -> ml_client.EmbedResult:
         clipping_fraction=0.0,
         rms_dbfs=-20.0,
         embedding=embedding,
+        model_version="test-model-v9",
     )
 
 
@@ -53,7 +54,7 @@ def stub_storage(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _stub_embed(monkeypatch: pytest.MonkeyPatch, *results: ml_client.EmbedResult) -> None:
     queue = list(results)
-    monkeypatch.setattr(ml_client, "embed_sample", lambda audio_bytes: queue.pop(0))
+    monkeypatch.setattr(ml_client, "embed_sample", lambda audio_bytes, min_speech_sec: queue.pop(0))
 
 
 def test_harness_page_served(client: TestClient) -> None:

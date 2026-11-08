@@ -8,11 +8,15 @@ Run with: uv run --project ml uvicorn ml.service:app --port $ML_SERVICE_PORT
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from typing import Literal
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from ml import audio, embedding, quality
+from ml import audio, config, embedding, quality, segments
+from ml.transcription import base as transcription_base
+from ml.transcription import engines, pipeline
 
 
 @asynccontextmanager
@@ -22,6 +26,7 @@ async def lifespan(app: FastAPI):
     # quality.run_quality_gate() instead, since it's cheap enough not to matter.
     audio.check_ffmpeg_installed()
     embedding.load_model()
+    config.warn_about_missing_keys(config.load_config())
     yield
 
 
@@ -38,6 +43,19 @@ class EmbedResponse(BaseModel):
     clipping_fraction: float
     rms_dbfs: float
     embedding: list[float] | None
+    model_version: str
+
+
+class SegmentResponse(BaseModel):
+    start: float
+    end: float
+    embedding: list[float]
+
+
+class SegmentsResponse(BaseModel):
+    model_version: str
+    duration_sec: float
+    segments: list[SegmentResponse]
 
 
 @app.get("/health")
@@ -46,12 +64,12 @@ def health() -> dict[str, str]:
 
 
 @app.post("/embed", response_model=EmbedResponse)
-async def embed_sample(request: Request) -> EmbedResponse:
+async def embed_sample(request: Request, min_speech_sec: float = Query(gt=0)) -> EmbedResponse:
     """Body is the raw audio file bytes (WAV/FLAC/m4a) — an internal service call, not a
     browser upload, so a plain octet-stream body is simpler than multipart."""
     audio_bytes = await request.body()
     samples, sample_rate = audio.decode(audio_bytes)
-    result = quality.run_quality_gate(samples, sample_rate)
+    result = quality.run_quality_gate(samples, sample_rate, min_speech_sec)
 
     vector = None
     if result.accepted:
@@ -67,4 +85,80 @@ async def embed_sample(request: Request) -> EmbedResponse:
         clipping_fraction=result.metrics.clipping_fraction,
         rms_dbfs=result.metrics.rms_dbfs,
         embedding=vector,
+        model_version=embedding.MODEL_VERSION,
+    )
+
+
+@app.post("/segments", response_model=SegmentsResponse)
+async def find_segments(
+    request: Request,
+    merge_gap_sec: float = Query(gt=0),
+    min_segment_sec: float = Query(gt=0),
+    split_over_sec: float = Query(gt=0),
+    window_sec: float = Query(gt=0),
+    absorb_under_sec: float = Query(gt=0),
+) -> SegmentsResponse:
+    settings = segments.SegmentSettings(
+        merge_gap_sec=merge_gap_sec,
+        min_segment_sec=min_segment_sec,
+        split_over_sec=split_over_sec,
+        window_sec=window_sec,
+        absorb_under_sec=absorb_under_sec,
+    )
+    audio_bytes = await request.body()
+    samples, sample_rate = audio.decode(audio_bytes)
+    found = segments.find_segments(audio.normalise_amplitude(samples), sample_rate, settings)
+
+    return SegmentsResponse(
+        model_version=embedding.MODEL_VERSION,
+        duration_sec=samples.shape[0] / sample_rate,
+        segments=[
+            SegmentResponse(start=item.start, end=item.end, embedding=item.embedding) for item in found
+        ],
+    )
+
+
+class WordResponse(BaseModel):
+    text: str
+    start: float
+    end: float
+
+
+class TranscribeResponse(BaseModel):
+    engine: str
+    language: str | None  # the language the engine reported for the whole file
+    words: list[WordResponse]
+    script_warning: str | None  # set when Urdu speech came back in Devanagari
+    requests_made: int  # more than 1 when the file was split at silence
+    duration_sec: float
+
+
+@app.exception_handler(transcription_base.TranscriptionError)
+def transcription_error_handler(request: Request, exc: transcription_base.TranscriptionError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+
+
+@app.post("/transcribe", response_model=TranscribeResponse)
+async def transcribe(
+    request: Request,
+    engine: Literal["groq", "elevenlabs"] | None = Query(default=None),
+    language: Literal["ur", "en", "auto"] = Query(default="ur"),
+) -> TranscribeResponse:
+    settings = config.load_config()
+    chosen = engine or settings.default_engine
+    transcriber = engines.build_transcriber(chosen, settings)
+    audio_bytes = await request.body()
+    samples, sample_rate = audio.decode(audio_bytes)
+    max_bytes = settings.groq_max_bytes if chosen == "groq" else None
+    result, requests_made = pipeline.transcribe_samples(
+        samples, sample_rate, transcriber, None if language == "auto" else language, max_bytes
+    )
+
+    return TranscribeResponse(
+        engine=chosen,
+        language=result.language,
+        words=[WordResponse(text=word.text, start=word.start, end=word.end) for word in result.words],
+        script_warning=transcription_base.script_warning(result.words),
+        requests_made=requests_made,
+        duration_sec=samples.shape[0] / sample_rate,
     )

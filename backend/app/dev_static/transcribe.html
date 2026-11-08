@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Transcription Dev Harness</title>
+<!-- Noto Nastaliq Urdu, the same family the mobile app bundles. Loaded from Google Fonts since
+     this page has no bundler; falls back to any Urdu-capable system font if blocked. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --border: #ccc; --bg: #fff; --bg-alt: #f4f4f4; --text: #111; --muted: #666;
+    --ok: #1a7f37; --bad: #b42318; --warn: #92400e; --accent: #1d4ed8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--text); background: var(--bg);
+    margin: 0 auto; padding: 12px 16px 48px; max-width: 1100px;
+  }
+  h1 { font-size: 1.25rem; margin-bottom: 4px; }
+  h2 { font-size: 1rem; margin: 0 0 8px; }
+  .banner { background: #fff3cd; border: 1px solid #d9a441; color: var(--warn); padding: 8px 12px; font-size: 0.85rem; margin-bottom: 12px; }
+  .banner.error { background: #fde8e6; border-color: var(--bad); color: var(--bad); }
+  fieldset { border: 1px solid var(--border); margin-bottom: 12px; padding: 12px; }
+  legend { padding: 0 4px; font-size: 0.85rem; color: var(--muted); }
+  label { display: block; font-size: 0.85rem; margin-top: 8px; }
+  input[type=email], input[type=password], select {
+    width: 100%; max-width: 360px; padding: 6px 8px; margin-top: 2px; border: 1px solid var(--border); font-size: 0.9rem;
+  }
+  button { padding: 6px 12px; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-alt); cursor: pointer; margin: 8px 6px 0 0; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  section[hidden], div[hidden] { display: none !important; }
+  audio { width: 100%; max-width: 480px; margin-top: 8px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+  .timer { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--muted); }
+  .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px; margin-top: 12px; }
+  .card { border: 1px solid var(--border); padding: 12px; }
+  .card h2 small { color: var(--muted); font-weight: normal; }
+  .entry { border-top: 1px solid var(--border); padding: 8px 0; }
+  .entry:first-of-type { border-top: none; }
+  .who { font-weight: 600; font-size: 0.9rem; }
+  .who .time { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: normal; margin-right: 6px; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; background: #eee; color: var(--muted); margin-left: 6px; }
+  .evidence { color: var(--muted); font-size: 0.75rem; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+  .text { font-size: 1rem; line-height: 1.5; }
+  /* Urdu text sits inside this left-to-right page, so each entry sets its own direction. */
+  .text.urdu {
+    font-family: "Noto Nastaliq Urdu", "Noto Nastaliq", serif; direction: rtl; text-align: right;
+    line-height: 2.2; /* Nastaliq's ascenders and descenders clip under a Latin line-height */ font-size: 1.25rem;
+  }
+  .unclear .who { color: var(--muted); }
+  .failure { color: var(--bad); font-size: 0.9rem; }
+  small.hint { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Transcription Dev Harness</h1>
+<div class="banner">Dev tool only. It exists only when <code>DEV_TOOLS_ENABLED=true</code>. Audio you submit here is sent to the transcription engines (Groq, ElevenLabs), which are third-party services. See <code>docs/adr/0023-transcriber-interface.md</code>.</div>
+<div id="insecure-context-banner" class="banner error" hidden>
+  Microphone access needs a secure context (HTTPS or localhost). Recording will fail on this address; uploading a file still works.
+</div>
+
+<section id="auth-panel">
+  <fieldset>
+    <legend>Log in</legend>
+    <form id="login-form">
+      <label>Email <input type="email" name="email" required></label>
+      <label>Password <input type="password" name="password" required></label>
+      <button type="submit" class="primary">Log in</button>
+    </form>
+  </fieldset>
+  <div id="auth-error" class="banner error" hidden></div>
+</section>
+
+<section id="work-panel" hidden>
+  <fieldset>
+    <legend>1. Choose</legend>
+    <div class="row">
+      <label>Workspace <select id="workspace"></select></label>
+      <label>Engine
+        <select id="engine">
+          <option value="">Default (set by TRANSCRIBER)</option>
+          <option value="groq">Groq Whisper</option>
+          <option value="elevenlabs">ElevenLabs Scribe</option>
+        </select>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Record or upload a clip</legend>
+    <button id="record-btn" class="primary">● Record</button>
+    <button id="stop-btn" disabled>■ Stop</button>
+    <span id="timer" class="timer">0.0s</span>
+    <div><label>Or upload a file (wav, flac, m4a, webm) <input type="file" id="file-input" accept=".wav,.flac,.m4a,.webm,audio/*"></label></div>
+    <audio id="preview" controls hidden></audio>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Transcribe</legend>
+    <button id="run-one" class="primary" disabled>Transcribe with chosen engine</button>
+    <button id="run-both" disabled>Run both engines side by side</button>
+    <button id="logout-btn">Log out</button>
+    <div><small class="hint">The clip is uploaded once and reused, so running both engines does not upload it twice.</small></div>
+  </fieldset>
+
+  <div id="status" class="banner" hidden></div>
+  <div id="results" class="results"></div>
+</section>
+
+<script>
+"use strict";
+
+// Unicode directional isolates, so an Urdu entry cannot drag the neighbouring layout the wrong way
+// (same technique as the enrollment harness and docs/adr/0007-rtl-per-string-not-forced.md).
+const FSI = "⁨", PDI = "⁩";
+
+const CONTENT_TYPES = { webm: "audio/webm", m4a: "audio/mp4", wav: "audio/wav", flac: "audio/flac" };
+
+// Tokens live only in this object, never in localStorage or a URL.
+const state = { accessToken: null, clip: null, uploaded: null, recorder: null, stream: null, chunks: [], timerId: null };
+
+if (!window.isSecureContext) document.getElementById("insecure-context-banner").hidden = false;
+
+async function api(path, { method = "GET", body, auth = true } = {}) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (auth) headers["Authorization"] = "Bearer " + state.accessToken;
+  const res = await fetch(path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  if (!res.ok) {
+    let detail = res.status + " " + res.statusText;
+    try {
+      const err = await res.json();
+      if (err.detail) detail = typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail);
+    } catch (_) { /* not JSON */ }
+    throw new Error(detail);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function showStatus(message, isError) {
+  const el = document.getElementById("status");
+  el.textContent = message;
+  el.className = isError ? "banner error" : "banner";
+  el.hidden = !message;
+}
+
+function clock(seconds) {
+  const whole = Math.floor(seconds);
+  return Math.floor(whole / 60) + ":" + String(whole % 60).padStart(2, "0");
+}
+
+// --- log in ---------------------------------------------------------------
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  try {
+    const tokens = await api("/auth/login", { method: "POST", auth: false, body: { email: form.get("email"), password: form.get("password") } });
+    state.accessToken = tokens.access_token;
+    document.getElementById("auth-panel").hidden = true;
+    document.getElementById("work-panel").hidden = false;
+    await loadWorkspaces();
+  } catch (err) {
+    const el = document.getElementById("auth-error");
+    el.textContent = "Log in failed: " + err.message;
+    el.hidden = false;
+  }
+});
+
+document.getElementById("logout-btn").addEventListener("click", () => {
+  state.accessToken = null;
+  document.getElementById("work-panel").hidden = true;
+  document.getElementById("auth-panel").hidden = false;
+});
+
+async function loadWorkspaces() {
+  const select = document.getElementById("workspace");
+  select.innerHTML = "";
+  const workspaces = await api("/workspaces");
+  for (const workspace of workspaces) {
+    const option = document.createElement("option");
+    option.value = workspace.id;
+    option.textContent = workspace.name;
+    select.appendChild(option);
+  }
+  if (workspaces.length === 0) showStatus("You are not a member of any workspace yet.", true);
+}
+
+// A new workspace means the clip must be uploaded again, since its key is scoped to one workspace.
+document.getElementById("workspace").addEventListener("change", () => { state.uploaded = null; });
+
+// --- the clip: record or upload ----------------------------------------------
+
+function setClip(blob, format) {
+  state.clip = { blob, format };
+  state.uploaded = null;
+  const preview = document.getElementById("preview");
+  preview.src = URL.createObjectURL(blob);
+  preview.hidden = false;
+  document.getElementById("run-one").disabled = false;
+  document.getElementById("run-both").disabled = false;
+}
+
+function recordingFormat(mimeType) {
+  return mimeType.includes("mp4") ? "m4a" : "webm";
+}
+
+document.getElementById("record-btn").addEventListener("click", async () => {
+  try {
+    state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    showStatus("Microphone access failed: " + err.message, true);
+    return;
+  }
+
+  state.chunks = [];
+  state.recorder = new MediaRecorder(state.stream);
+  state.recorder.ondataavailable = (e) => { if (e.data.size > 0) state.chunks.push(e.data); };
+  state.recorder.onstop = () => {
+    const mimeType = state.recorder.mimeType || "audio/webm";
+    setClip(new Blob(state.chunks, { type: mimeType }), recordingFormat(mimeType));
+  };
+  state.recorder.start();
+
+  const startedAt = Date.now();
+  state.timerId = setInterval(() => {
+    document.getElementById("timer").textContent = ((Date.now() - startedAt) / 1000).toFixed(1) + "s";
+  }, 100);
+  document.getElementById("record-btn").disabled = true;
+  document.getElementById("stop-btn").disabled = false;
+});
+
+document.getElementById("stop-btn").addEventListener("click", () => {
+  if (state.recorder && state.recorder.state !== "inactive") state.recorder.stop();
+  if (state.stream) state.stream.getTracks().forEach((track) => track.stop());
+  clearInterval(state.timerId);
+  document.getElementById("record-btn").disabled = false;
+  document.getElementById("stop-btn").disabled = true;
+});
+
+document.getElementById("file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const format = file.name.split(".").pop().toLowerCase();
+  if (!CONTENT_TYPES[format]) {
+    showStatus("Unsupported file type ." + format + ". Use wav, flac, m4a or webm.", true);
+    return;
+  }
+  showStatus("", false);
+  setClip(file, format);
+});
+
+// --- upload once, transcribe with one or both engines -----------------------------
+
+async function ensureUploaded() {
+  if (state.uploaded) return state.uploaded;
+  const workspaceId = document.getElementById("workspace").value;
+  const upload = await api("/workspaces/" + workspaceId + "/uploads", { method: "POST", body: { audio_format: state.clip.format } });
+  const put = await fetch(upload.upload_url, { method: "PUT", headers: { "Content-Type": CONTENT_TYPES[state.clip.format] }, body: state.clip.blob });
+  if (!put.ok) throw new Error("Upload to storage failed: " + put.status);
+  state.uploaded = { workspaceId, audioKey: upload.audio_key };
+  return state.uploaded;
+}
+
+async function transcribeWith(engine) {
+  const { workspaceId, audioKey } = await ensureUploaded();
+  const startedAt = performance.now();
+  try {
+    const body = await api("/workspaces/" + workspaceId + "/transcribe", { method: "POST", body: { audio_key: audioKey, engine: engine || null } });
+    return { ok: true, seconds: (performance.now() - startedAt) / 1000, body };
+  } catch (err) {
+    return { ok: false, seconds: (performance.now() - startedAt) / 1000, message: err.message };
+  }
+}
+
+async function run(engines) {
+  document.getElementById("run-one").disabled = true;
+  document.getElementById("run-both").disabled = true;
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+  showStatus("Uploading and transcribing. The ML service may take a few seconds per engine.", false);
+
+  try {
+    await ensureUploaded();
+    const outcomes = await Promise.all(engines.map(transcribeWith));
+    showStatus("", false);
+    outcomes.forEach((outcome, index) => results.appendChild(renderResult(engines[index], outcome)));
+  } catch (err) {
+    showStatus("Failed before transcribing: " + err.message, true);
+  } finally {
+    document.getElementById("run-one").disabled = false;
+    document.getElementById("run-both").disabled = false;
+  }
+}
+
+document.getElementById("run-one").addEventListener("click", () => run([document.getElementById("engine").value]));
+document.getElementById("run-both").addEventListener("click", () => run(["groq", "elevenlabs"]));
+
+// --- rendering. Text goes in with textContent, never innerHTML. -------------------------
+
+function element(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+
+function renderResult(requestedEngine, outcome) {
+  const card = element("div", "card");
+  const title = element("h2", null, (outcome.ok ? outcome.body.engine : requestedEngine || "default engine") + " ");
+  title.appendChild(element("small", null, "(" + outcome.seconds.toFixed(1) + " s round trip)"));
+  card.appendChild(title);
+
+  if (!outcome.ok) {
+    card.appendChild(element("div", "failure", outcome.message));
+    return card;
+  }
+
+  const body = outcome.body;
+  card.appendChild(element("div", "evidence", "engine reported language: " + (body.engine_language || "none") + " · clip " + body.duration_sec.toFixed(1) + " s"));
+
+  if (body.script_warning) card.appendChild(element("div", "banner error", "Script warning: " + body.script_warning));
+  for (const skipped of body.skipped_voiceprints) card.appendChild(element("div", "banner", "Skipped " + skipped.name + ": " + skipped.reason));
+  if (body.entries.length === 0) card.appendChild(element("div", "evidence", "No words came back."));
+
+  for (const entry of body.entries) card.appendChild(renderEntry(entry));
+
+  return card;
+}
+
+function renderEntry(entry) {
+  const wrapper = element("div", entry.speaker_label === "Unclear" ? "entry unclear" : "entry");
+  const who = element("div", "who");
+  who.appendChild(element("span", "time", clock(entry.start) + " – " + clock(entry.end)));
+  who.appendChild(document.createTextNode(entry.speaker_label));
+  who.appendChild(element("span", "badge", entry.language));
+  wrapper.appendChild(who);
+
+  if (entry.best_score !== null) {
+    const parts = ["closest " + (entry.best_candidate_name || "nobody") + " " + entry.best_score.toFixed(2)];
+    if (entry.margin !== null) parts.push("margin " + entry.margin.toFixed(2));
+    parts.push(entry.pooled_seconds.toFixed(1) + " s pooled");
+    if (entry.floor_applied !== null) parts.push("floor " + entry.floor_applied.toFixed(2));
+    wrapper.appendChild(element("div", "evidence", parts.join(" · ")));
+  }
+
+  const isUrdu = entry.language === "ur" || entry.language === "mixed";
+  const text = element("div", isUrdu ? "text urdu" : "text", isUrdu ? FSI + entry.text + PDI : entry.text);
+
+  if (isUrdu) {
+    text.setAttribute("dir", "rtl");
+    text.setAttribute("lang", "ur");
+  }
+
+  wrapper.appendChild(text);
+
+  return wrapper;
+}
+</script>
+</body>
+</html>

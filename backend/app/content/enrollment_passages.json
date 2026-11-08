@@ -1,0 +1,32 @@
+{
+  "min_speech_seconds": 15,
+  "passages": [
+    {
+      "language": "en",
+      "title": "English",
+      "is_urdu": false,
+      "text": "Most mornings I like to take a slow walk before the city gets loud. I make a cup of tea, put on my shoes, and wander without any plan. It helps me clear my head and notice small things, like how the light changes between the trees. By the time I am back home, the whole day feels much calmer.",
+      "transliteration": null,
+      "meaning": null,
+      "notes": "Plosives (p, t, k, b, d, g), fricatives (f, s, z, sh, th), affricates (ch, j), nasals (m, n, ng), liquids (l, r) and a wide vowel spread, in four ordinary sentences rather than a constructed pangram."
+    },
+    {
+      "language": "ur",
+      "title": "Urdu",
+      "is_urdu": true,
+      "text": "مجھے صبح کی چائے کے بغیر دن شروع ہی نہیں لگتا۔ چاہے کام کتنا بھی زیادہ ہو، تھوڑی دیر سکون سے بیٹھ کر چائے پینا میرے لیے بہت ضروری ہے۔ کبھی کبھی کھڑکی کے پاس بیٹھ کر بارش دیکھنا مجھے بہت اچھا لگتا ہے۔ پھر سب کے ساتھ ناشتہ کرنے کا جو مزہ ہے، وہ کسی اور چیز میں نہیں۔",
+      "transliteration": "Mujhe subah ki chai ke baghair din shuru hi nahi lagta. Chahe kaam kitna bhi zyada ho, thori der sukoon se baith kar chai peena mere liye bohat zaroori hai. Kabhi kabhi khirki ke paas baith kar baarish dekhna mujhe bohat acha lagta hai. Phir sab ke saath nashta karne ka jo maza hai, woh kisi aur cheez mein nahi.",
+      "meaning": "My day doesn't feel started without morning tea. However much work there is, sitting calmly for a while with tea matters a lot to me. Sometimes I like sitting by the window watching the rain. And the joy of having breakfast together with everyone is like nothing else.",
+      "notes": "Retroflex and aspirated sounds (thori, baith), the guttural gh and kh (baghair, khirki), z with ض (zaroori, maza), nasalisation (nahi, mein) and the full run of Urdu vowels. These are sounds the VoxCeleb training data barely contains. The verbs avoid first-person gender endings, so the same text is natural for any speaker."
+    },
+    {
+      "language": "mixed",
+      "title": "Code-switched",
+      "is_urdu": true,
+      "text": "یار، project کی deadline اب بہت قریب ہے، لیکن client کی طرف سے requirements ابھی تک clear نہیں ہوئیں۔ اس لیے پہلے ایک quick call set کر لیتے ہیں تاکہ سب کو پتا چل جائے کہ کیا چاہیے۔ پھر team کے ساتھ بیٹھ کر plan بنا لیں گے، اور اگر کوئی issue آیا تو manager کو update دے دیں گے۔",
+      "transliteration": "Yaar, project ki deadline ab bohat qareeb hai, lekin client ki taraf se requirements abhi tak clear nahi hui'n. Is liye pehle ek quick call set kar lete hain taake sab ko pata chal jaye ke kya chahiye. Phir team ke saath baith kar plan bana lein ge, aur agar koi issue aya to manager ko update de dein ge.",
+      "meaning": "Look, the project deadline is very close now, but the client's requirements still aren't clear. So let's set up a quick call first, so everyone knows what is needed. Then we'll sit down with the team and make a plan, and if any issue comes up we'll update the manager.",
+      "notes": "This is how the mixing actually sounds in a Pakistani office: English nouns for work concepts (project, deadline, client, requirements, team, plan, issue, manager) dropped into an Urdu sentence frame, and English verbs turned into Urdu ones with a helper (set kar lete hain, update de dein ge). Nothing here is one language's sentence translated halfway into the other. The verbs avoid first-person gender endings, so any speaker can read it naturally."
+    }
+  ]
+}

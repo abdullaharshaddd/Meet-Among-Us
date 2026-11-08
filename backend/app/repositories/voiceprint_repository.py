@@ -3,7 +3,9 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.models.user import User
 from app.models.voiceprint import Voiceprint
+from app.models.workspace import WorkspaceMember
 
 
 def get_by_user_id(db: Session, user_id: UUID) -> Voiceprint | None:
@@ -48,3 +50,16 @@ def upsert(
 def delete_by_user_id(db: Session, user_id: UUID) -> None:
     db.execute(delete(Voiceprint).where(Voiceprint.user_id == user_id))
     db.commit()
+
+
+def list_for_workspace(db: Session, workspace_id: UUID) -> list[tuple[Voiceprint, User]]:
+    """Only voiceprints of this workspace's members. Speaker matching must never
+    compare a voice against someone outside the room."""
+    rows = db.execute(
+        select(Voiceprint, User)
+        .join(User, User.id == Voiceprint.user_id)
+        .join(WorkspaceMember, WorkspaceMember.user_id == Voiceprint.user_id)
+        .where(WorkspaceMember.workspace_id == workspace_id)
+    ).all()
+
+    return [(voiceprint, user) for voiceprint, user in rows]

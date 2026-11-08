@@ -20,7 +20,7 @@ context, and `docs/DATA_MODEL.md` for the schema contract.
 # backend
 cd backend && uv sync
 cd backend && uv run alembic upgrade head
-cd backend && uv run uvicorn app.main:app --reload
+cd backend && uv run uvicorn app.main:app --reload --port 8003
 cd backend && uv run pytest
 
 # mobile

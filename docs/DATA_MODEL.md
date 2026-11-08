@@ -61,7 +61,7 @@ Kept so centroids can be recomputed if the model changes.
 | `language` | enum | `en` / `ur` / `mixed` |
 | `duration_sec` | float | |
 | `snr_db` | float | quality gate metric |
-| `speech_duration_sec` | float | post-VAD, must be ≥ 12s |
+| `speech_duration_sec` | float | post-VAD, must be ≥ 15s (`min_speech_seconds`, ADR-0013) |
 | `embedding` | vector(192) | |
 | `accepted` | bool | false if it failed the quality gate |
 | `rejection_reason` | text | nullable |
@@ -214,6 +214,8 @@ Unique on `(track_id, sequence)` — makes retries idempotent.
 `transcript_segments`, `summaries`, `decisions`, `action_items`, `decision_status_history`, `embeddings_index`, `agent_tool_calls`.
 
 Listed here only so nobody accidentally reuses these names for something else.
+
+Note for when `transcript_segments` is designed: renaming an Unknown Speaker to an outside guest (by typing a name) creates a `meeting_attendees` row with `guest_name` and no voiceprint, and every renamed segment will need a field that carries that per-segment label, for that meeting only.
 
 ---
 

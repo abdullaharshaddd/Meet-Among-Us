@@ -26,6 +26,7 @@ def _accepted(embedding: list[float], speech_duration_sec: float = 13.0) -> ml_c
         clipping_fraction=0.0,
         rms_dbfs=-20.0,
         embedding=embedding,
+        model_version="test-model-v9",
     )
 
 
@@ -40,6 +41,7 @@ def _rejected(reason_code: str = "SPEECH_TOO_SHORT", speech_duration_sec: float 
         clipping_fraction=0.0,
         rms_dbfs=-20.0,
         embedding=None,
+        model_version="test-model-v9",
     )
 
 
@@ -65,11 +67,17 @@ def stub_storage(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(storage, "delete_objects", lambda keys: None)
 
 
+asked_minimums: list[float] = []
+
+
 def _stub_embed(monkeypatch: pytest.MonkeyPatch, *results: ml_client.EmbedResult) -> None:
     """Each call to embed_sample returns the next result in sequence."""
     queue = list(results)
+    asked_minimums.clear()
 
-    def fake_embed(audio_bytes: bytes) -> ml_client.EmbedResult:
+    def fake_embed(audio_bytes: bytes, min_speech_sec: float) -> ml_client.EmbedResult:
+        asked_minimums.append(min_speech_sec)
+
         return queue.pop(0)
 
     monkeypatch.setattr(ml_client, "embed_sample", fake_embed)
@@ -151,7 +159,7 @@ def test_three_acceptances_produce_centroid_and_complete(
     voiceprint = voiceprint_repository.get_by_user_id(db, user_id)
     assert voiceprint is not None
     assert voiceprint.sample_count == 3
-    assert voiceprint.model_version == enrollment_service.MODEL_VERSION
+    assert voiceprint.model_version == "test-model-v9"
     # Orthogonal one-hot embeddings -> cosine distance of 1.0 between every pair.
     assert voiceprint.intra_speaker_variance == pytest.approx(1.0)
 
@@ -244,3 +252,31 @@ def test_m4a_upload_url_binds_audio_mp4(client: TestClient, monkeypatch: pytest.
     assert response.status_code == 200
     assert captured["content_type"] == "audio/mp4"
     assert captured["key"].endswith(".m4a")
+
+
+def test_passages_endpoint_serves_the_single_source(client: TestClient) -> None:
+    tokens = _signup(client)
+
+    response = client.get("/enrollment/passages", headers=_auth(tokens))
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["min_speech_seconds"] == 15
+    assert [p["language"] for p in body["passages"]] == ["en", "ur", "mixed"]
+    assert all(p["text"] for p in body["passages"])
+
+
+def test_submit_sample_asks_the_ml_service_for_the_configured_minimum(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, stub_storage: None
+) -> None:
+    tokens = _signup(client)
+    _stub_embed(monkeypatch, _rejected())
+
+    response = client.post(
+        "/enrollment/samples",
+        json={"language": "en", "audio_key": "enrollment/x/en/1.flac"},
+        headers=_auth(tokens),
+    )
+
+    assert asked_minimums == [15]
+    assert "at least 15" in response.json()["reason_message"]

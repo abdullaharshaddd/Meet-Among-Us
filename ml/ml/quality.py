@@ -21,7 +21,6 @@ from ml import vad
 
 # ponytail: first-guess thresholds, not yet checked against real recordings — Task 4's
 # speaker-separation dataset is the first real data to retune these against.
-MIN_SPEECH_DURATION_SEC = 12.0
 SNR_FLOOR_DB = 15.0
 CLIPPING_FRACTION_MAX = 0.001  # fraction of samples pinned at full scale
 NEAR_SILENT_RMS_DBFS = -50.0
@@ -31,7 +30,10 @@ NEAR_SILENT_RMS_DBFS = -50.0
 REASONS: dict[str, str] = {
     "NEAR_SILENT": "We couldn't hear anything — check your mic and try again.",
     "CLIPPED": "Your voice was too loud for the mic — move back a little.",
-    "SPEECH_TOO_SHORT": "We only caught {speech_duration_sec:.1f} seconds of speech — read the whole passage.",
+    "SPEECH_TOO_SHORT": (
+        "We only caught {speech_duration_sec:.1f} seconds of speech and need at least {min_speech_sec:.0f}. "
+        "Keep reading until the end of the passage."
+    ),
     "TOO_NOISY": "Too much background noise — try a quieter room.",
 }
 
@@ -96,23 +98,25 @@ def snr_db(samples: np.ndarray, sample_rate: int, speech_intervals: list[tuple[f
     return float(10 * np.log10(speech_power / noise_power))
 
 
-def evaluate(metrics: QualityMetrics) -> QualityGateResult:
+def evaluate(metrics: QualityMetrics, min_speech_sec: float) -> QualityGateResult:
     """Pure threshold logic. Order matters when a sample fails more than one check —
     most fundamental problem wins: a dead recording is reported as silent, not as
     lacking speech; a distorted one is reported as clipped, not as too quiet an SNR."""
     for code, failing in (
         ("NEAR_SILENT", metrics.rms_dbfs < NEAR_SILENT_RMS_DBFS),
         ("CLIPPED", metrics.clipping_fraction > CLIPPING_FRACTION_MAX),
-        ("SPEECH_TOO_SHORT", metrics.speech_duration_sec < MIN_SPEECH_DURATION_SEC),
+        ("SPEECH_TOO_SHORT", metrics.speech_duration_sec < min_speech_sec),
         ("TOO_NOISY", metrics.snr_db < SNR_FLOOR_DB),
     ):
         if failing:
-            message = REASONS[code].format(speech_duration_sec=metrics.speech_duration_sec)
+            message = REASONS[code].format(
+                speech_duration_sec=metrics.speech_duration_sec, min_speech_sec=min_speech_sec
+            )
             return QualityGateResult(accepted=False, reason_code=code, reason_message=message, metrics=metrics)
     return QualityGateResult(accepted=True, reason_code=None, reason_message=None, metrics=metrics)
 
 
-def run_quality_gate(samples: np.ndarray, sample_rate: int) -> QualityGateResult:
+def run_quality_gate(samples: np.ndarray, sample_rate: int, min_speech_sec: float) -> QualityGateResult:
     """The full gate: VAD -> metrics -> evaluate. What the service calls per sample."""
     speech_intervals = vad.detect_speech_intervals(samples, sample_rate)
     speech_duration_sec = sum(end - start for start, end in speech_intervals)
@@ -122,4 +126,4 @@ def run_quality_gate(samples: np.ndarray, sample_rate: int) -> QualityGateResult
         clipping_fraction=clipping_fraction(samples),
         rms_dbfs=rms_dbfs(samples),
     )
-    return evaluate(metrics)
+    return evaluate(metrics, min_speech_sec)
