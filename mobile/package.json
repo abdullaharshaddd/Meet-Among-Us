@@ -4,8 +4,6 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/geist-mono": "^0.4.3",
-    "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
-    "@expo-google-fonts/ibm-plex-sans": "^0.4.1",
     "@expo-google-fonts/instrument-sans": "^0.4.2",
     "@expo-google-fonts/instrument-serif": "^0.4.1",
     "@expo-google-fonts/noto-nastaliq-urdu": "^0.4.2",
