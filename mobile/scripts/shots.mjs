@@ -82,6 +82,9 @@ const ROUTES = [
   { name: "enroll-recording", enrolled: false, mic: true, nav: [{ button: /Continue enrollment/ }, { button: "Continue" }, { button: "Start recording" }], wait: 2500 },
   { name: "workspaces-create", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Create a workspace" }] },
   { name: "workspaces-join", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Join with a code" }] },
+  { name: "workspaces-created", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Create a workspace" }], type: "Orbit Labs", submit: "Create workspace", wait: 1500 },
+  { name: "workspaces-join-typed", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Join with a code" }], type: "k7qm2xp", submit: false, wait: 500 },
+  { name: "workspaces-invite", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Members" }, { button: "Invite by email" }] },
   { name: "workspaces-members", nav: [{ button: /Workspace Orbit Labs/ }, { button: "Members" }] },
 ];
 
@@ -96,7 +99,7 @@ function mockApi(context, enrollment) {
         return json({ access_token: "shot-access", refresh_token: "shot-refresh", token_type: "bearer", user: USER });
       }
       if (pathname.endsWith("/enrollment/status")) return json(enrollment);
-      if (pathname.endsWith("/workspaces")) return json(WORKSPACES);
+      if (pathname.endsWith("/workspaces")) return json(route.request().method() === "POST" ? WORKSPACES[0] : WORKSPACES);
       if (pathname.endsWith("/workspaces/join-by-code")) return json(WORKSPACES[1]);
 
       return json({ detail: "not mocked" }, 404);
@@ -184,7 +187,7 @@ async function run() {
         }
         if (route.type) {
           await page.getByRole("textbox").last().fill(route.type);
-          await page.getByRole("button", { name: "Send" }).click();
+          if (route.submit !== false) await page.getByRole("button", { name: route.submit ?? "Send" }).click();
         }
         if (route.wait) await page.waitForTimeout(route.wait);
         if (route.scrollBy) await scrollMain(page, route.scrollBy);
