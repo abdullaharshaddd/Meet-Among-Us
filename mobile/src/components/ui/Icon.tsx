@@ -27,7 +27,7 @@ const icons = {
   minimise: { ios: "chevron.down", android: "keyboard_arrow_down" },
   tabMeetings: { ios: "waveform", android: "graphic_eq" },
   tabTasks: { ios: "checkmark.circle", android: "task_alt" },
-  tabAssistant: { ios: "sparkles", android: "auto_awesome" },
+  tabAssistant: { ios: "bubble.left", android: "chat_bubble" },
   tabSettings: { ios: "gearshape", android: "settings" },
 } as const;
 

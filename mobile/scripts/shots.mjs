@@ -56,6 +56,7 @@ const ENROLLMENT = {
 // Each entry: where to go once signed in, and what to do before the picture.
 const ROUTES = [
   { name: "login", auth: false, path: "/" },
+  { name: "signup", auth: false, path: "/", then: { text: "Create one" } },
   { name: "design-system", auth: false, path: "/design-system", scrolls: 14 },
   { name: "meetings", path: "/meetings" },
   { name: "meetings-not-enrolled", path: "/meetings", enrolled: false },
@@ -111,7 +112,7 @@ async function signIn(page) {
   await page.goto(BASE, { waitUntil: "networkidle" });
   await page.getByRole("textbox").first().fill(USER.email);
   await page.locator("input[type=password]").first().fill("password123");
-  await page.getByRole("button", { name: /^(sign in|continue with email)$/i }).first().click();
+  await page.getByRole("button", { name: /^(sign in|sign in with email|continue with email)$/i }).first().click();
   await page.waitForTimeout(1500);
 }
 
