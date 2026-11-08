@@ -117,3 +117,30 @@ Plain-English definitions, added the first time each term is used in code.
 - **ffmpeg** — a command-line program that converts almost any audio or video file into another format; the ML service uses it to read m4a.
 - **Workspace** — a group of people (a team or company) who share projects and meetings in the app.
 - **Join code** — an 8-character code (shown as XXXX-XXXX) that lets anyone who has it join a workspace without an email invite.
+- **Unknown Speaker N** — a label for a stretch of speech whose voice did not match anyone enrolled in the workspace; the same unmatched voice keeps the same number within one clip. It is not a person, and it is different from a Guest.
+- **Guest** — a real, named outside person the host invites to one meeting; they have no account or voiceprint.
+- **Speech segment** — one continuous stretch of speech cut out of a recording, with its own start time, end time and speaker embedding.
+- **Match threshold** — the minimum cosine similarity at which a voice counts as belonging to an enrolled person; below it the voice is Unknown.
+- **Score floor** — the least similarity a voice must reach before we put a name on it; it rises with how much speech we heard, because short clips score low even for the right person.
+- **Margin** — how far the best match's score is ahead of the second-best; a small margin means two people sound alike to us, so we say Unknown instead of guessing.
+- **Pooling** — averaging the embeddings of neighbouring pieces of speech that seem to be the same person, so one weak piece cannot change the decision.
+- **Easing curve** — the shape of how fast an animation moves over its length; "ease-out" starts quick and slows gently at the end, which feels natural for things that settle into place.
+- **Spring animation** — an animation that moves like a weight on a spring instead of following a fixed timing, so it can overshoot slightly and settle.
+- **Scrim** — the semi-transparent dark layer drawn over a screen behind a sheet, so the sheet stands out and the content underneath is clearly out of reach.
+- **Light/dark palette** — one full set of color tokens for each theme, with identical names, so a component asks for "surface" and gets the right shade for whichever theme is on.
+- **Unclear** — a label for a short stretch of speech that matched nobody and is too brief to tell whether it is a new voice, so it is not given an Unknown Speaker number.
+- **Signal colour** — the one bright orange in the app, kept for "recording or live right now", so seeing it always means the microphone is active.
+- **Hairline** — the thinnest line a screen can draw, one physical pixel wide, used for borders and dividers instead of heavy boxes.
+- **Tabular figures** — digits that all take the same width, so a ticking timer doesn't jiggle left and right as the numbers change.
+- **Speaker hue** — one of six small colours used on a dot or bar to tell speakers apart at a glance; it is never used for text.
+- **Word-level timestamps** — for every word in a transcript, the second it started and the second it ended, which is what lets us say which speaker's turn each word fell into.
+- **Diarization** — working out who spoke when in a recording; we do this ourselves from enrolled voiceprints rather than letting the transcription engine do it.
+- **Code-switching** — mixing two languages in one sentence, such as Urdu with English work words, the way many Pakistani professionals talk.
+- **WER (word error rate)** — the share of words a transcript gets wrong compared with a hand-written reference (substituted, missed or extra words); lower is better.
+- **CER (character error rate)** — the same measure counted in characters instead of words, which suits Urdu because where one word ends and the next begins is written inconsistently.
+- **Bidi isolate** — an invisible character pair that seals a stretch of text so the left-to-right or right-to-left order of its neighbours can't rearrange it; used so "15:00" stays in order inside an Urdu sentence.
+- **Control border** — the outline of something you can press or tick, held to a stricter contrast than ordinary dividers so you can always see where the control is.
+- **Dock** — the row of buttons that floats a fixed distance above the bottom of a screen (or above the tab bar), with the list fading out underneath it.
+- **Bottom sheet** — a panel that slides up from the bottom of the screen over a dimmed background and can be dragged down to close.
+- **Hold to confirm** — a button that only acts after being pressed for a set time, shown by a ring filling up, used for things that cannot be undone like ending a meeting.
+- **Citation chip** — a small tag on an assistant answer that names the meeting and moment the answer came from, and jumps there when tapped.

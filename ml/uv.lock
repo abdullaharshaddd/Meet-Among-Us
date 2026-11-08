@@ -615,6 +615,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "requests" },
     { name = "silero-vad" },
     { name = "soundfile" },
     { name = "speechbrain" },
@@ -634,6 +635,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "numpy", specifier = ">=1.26" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "silero-vad", specifier = ">=5.1" },
     { name = "soundfile", specifier = ">=0.12" },
     { name = "speechbrain", specifier = ">=1.0" },

@@ -71,3 +71,24 @@ class InvalidJoinCodeError(AppError):
 
 class CodeJoiningDisabledError(AppError):
     status_code = 403
+
+
+class ClipNotInWorkspaceError(AppError):
+    """audio_key wasn't uploaded through this workspace's clip upload endpoint."""
+
+    status_code = 400
+
+
+class TranscriptionUnavailableError(AppError):
+    """The transcription engine can't be used right now, for example its API key isn't set.
+    The message names what to fix."""
+
+    status_code = 503
+
+
+class TranscriptionRateLimitedError(AppError):
+    status_code = 429
+
+
+class TranscriptionFailedError(AppError):
+    status_code = 502

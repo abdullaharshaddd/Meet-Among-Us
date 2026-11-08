@@ -6,14 +6,21 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.enrollment import (
     EnrollmentStatusResponse,
+    PassagesResponse,
     SubmitSampleRequest,
     SubmitSampleResponse,
     UploadUrlRequest,
     UploadUrlResponse,
 )
+from app.core import enrollment_content
 from app.services import enrollment_service
 
 router = APIRouter(prefix="/enrollment", tags=["enrollment"])
+
+
+@router.get("/passages", response_model=PassagesResponse)
+def get_passages(user: User = Depends(get_current_user)) -> PassagesResponse:
+    return enrollment_content.load_passages()
 
 
 @router.post("/uploads", response_model=UploadUrlResponse)

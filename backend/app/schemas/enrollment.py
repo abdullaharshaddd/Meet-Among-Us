@@ -43,3 +43,19 @@ class PassageStatus(BaseModel):
 class EnrollmentStatusResponse(BaseModel):
     enrollment_status: EnrollmentStatus
     passages: list[PassageStatus]
+
+
+class PassageContent(BaseModel):
+    language: EnrollmentLanguage
+    title: str
+    is_urdu: bool
+    text: str
+    transliteration: str | None
+    meaning: str | None
+    notes: str
+
+
+class PassagesResponse(BaseModel):
+    # Post-VAD seconds of speech a sample needs; the same number the quality gate enforces.
+    min_speech_seconds: float
+    passages: list[PassageContent]

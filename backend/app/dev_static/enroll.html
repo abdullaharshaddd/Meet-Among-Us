@@ -81,7 +81,8 @@
   .meter-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
   .meter { flex: 1; height: 10px; background: var(--bg-alt); border: 1px solid var(--border); position: relative; }
   .meter-fill { height: 100%; width: 0%; background: var(--accept); }
-  .timer { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--muted); min-width: 4em; }
+  .timer { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--muted); min-width: 8em; }
+  .timer.reached { color: #1a7f37; font-weight: 600; }
   .result { margin-top: 8px; padding: 8px; font-size: 0.85rem; }
   .result.accepted { background: #eaf7ee; color: var(--accept); border: 1px solid var(--accept); }
   .result.rejected { background: #fde8e6; color: var(--reject); border: 1px solid var(--reject); }
@@ -185,31 +186,11 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Passages — copied verbatim from docs/ENROLLMENT_PASSAGES.md. Kept as plain
-// constants rather than fetched from the backend: nothing else in the app
-// serves this markdown file, and duplicating three short strings is cheaper
-// than building a doc-to-API pipeline for a tool that must not ship anyway.
+// Passages and the speech minimum come from GET /enrollment/passages, which reads
+// backend/app/content/enrollment_passages.json: the only copy of the text.
 // ---------------------------------------------------------------------------
-const PASSAGES = [
-  {
-    language: "en",
-    title: "1. English",
-    urdu: false,
-    text: "Most mornings I like to take a slow walk before the city gets loud, just to clear my head and notice how the light changes along the way.",
-  },
-  {
-    language: "ur",
-    title: "2. Urdu",
-    urdu: true,
-    text: "مجھے صبح کی چائے کے بغیر دن شروع ہی نہیں لگتا، چاہے کام کتنا بھی زیادہ ہو، تھوڑی دیر سکون سے بیٹھ کر چائے ضرور پیتا ہوں۔",
-  },
-  {
-    language: "mixed",
-    title: "3. Code-switched",
-    urdu: true,
-    text: "یار، deadline زیادہ دور نہیں، لیکن client سے requirements ابھی تک clear نہیں ہوئی، اس لیے میں پہلے ایک quick call schedule کرنا چاہتا ہوں تاکہ confusion نہ رہے۔",
-  },
-];
+let PASSAGES = [];
+let MIN_SPEECH_SECONDS = 0;
 
 // Unicode directional isolates (FSI/PDI) — same technique as mobile's
 // src/components/Text.tsx (see docs/adr/0007-rtl-per-string-not-forced.md),
@@ -257,6 +238,17 @@ async function api(path, { method = "GET", body, auth = false } = {}) {
   return res.json();
 }
 
+async function loadPassages() {
+  const content = await api("/enrollment/passages", { auth: true });
+  MIN_SPEECH_SECONDS = content.min_speech_seconds;
+  PASSAGES = content.passages.map((passage, index) => ({
+    language: passage.language,
+    title: (index + 1) + ". " + passage.title,
+    urdu: passage.is_urdu,
+    text: passage.text,
+  }));
+}
+
 // --- tabs --------------------------------------------------------------
 
 document.querySelectorAll("nav.tabs button").forEach((btn) => {
@@ -284,8 +276,12 @@ function onAuthed(tokens) {
   document.getElementById("auth-panel").hidden = true;
   document.getElementById("enroll-panel").hidden = false;
   document.getElementById("whoami").textContent = tokens.user.display_name + " <" + tokens.user.email + ">";
-  buildPassageCards();
-  refreshStatus();
+  loadPassages()
+    .then(() => {
+      buildPassageCards();
+      refreshStatus();
+    })
+    .catch((err) => alert("Could not load the passages: " + err.message));
 }
 
 document.getElementById("signup-form").addEventListener("submit", async (e) => {
@@ -456,11 +452,12 @@ function buildPassageCards() {
     card.innerHTML = `
       <h3>${passage.title} <span class="badge passage-badge not_attempted">not_attempted</span></h3>
       <div class="${textClass}"${passage.urdu ? ' dir="rtl" lang="ur"' : ""}>${textContent}</div>
+      <small class="hint">Keep reading until at least ${MIN_SPEECH_SECONDS} seconds.</small>
       <div class="meter-row">
         <button data-action="record" class="primary">● Record</button>
         <button data-action="stop" disabled>■ Stop</button>
         <div class="meter"><div class="meter-fill"></div></div>
-        <span class="timer">0.0s</span>
+        <span class="timer">0.0s / ${MIN_SPEECH_SECONDS}s</span>
       </div>
       <audio controls hidden></audio>
       <div class="playback-actions" hidden>
@@ -519,7 +516,9 @@ async function startRecording(language) {
   const timerEl = card.querySelector(".timer");
   const startedAt = Date.now();
   rec.timerInterval = setInterval(() => {
-    timerEl.textContent = ((Date.now() - startedAt) / 1000).toFixed(1) + "s";
+    const elapsed = (Date.now() - startedAt) / 1000;
+    timerEl.textContent = elapsed.toFixed(1) + "s / " + MIN_SPEECH_SECONDS + "s";
+    timerEl.classList.toggle("reached", elapsed >= MIN_SPEECH_SECONDS);
   }, 100);
 
   card.querySelector('[data-action="record"]').disabled = true;
@@ -569,7 +568,8 @@ function reRecord(language) {
   card.querySelector("audio").hidden = true;
   card.querySelector(".playback-actions").hidden = true;
   card.querySelector(".result").hidden = true;
-  card.querySelector(".timer").textContent = "0.0s";
+  card.querySelector(".timer").textContent = "0.0s / " + MIN_SPEECH_SECONDS + "s";
+  card.querySelector(".timer").classList.remove("reached");
   card.querySelector(".meter-fill").style.width = "0%";
 }
 

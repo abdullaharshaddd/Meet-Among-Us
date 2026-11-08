@@ -13,6 +13,10 @@ import numpy as np
 import torch
 from speechbrain.inference.speaker import EncoderClassifier
 
+# The one place the model version is defined. The backend stores whatever the ML service
+# reports, so a model swap only ever changes this line.
+MODEL_VERSION = "ecapa-voxceleb-v1"
+
 _classifier: EncoderClassifier | None = None
 
 
@@ -33,3 +37,12 @@ def embed(samples: np.ndarray) -> list[float]:
     with torch.no_grad():
         vector = _classifier.encode_batch(tensor)
     return vector.squeeze().tolist()
+
+
+def normalise(vector: list[float]) -> list[float]:
+    length = float(np.linalg.norm(vector))
+
+    if length == 0:
+        return vector
+
+    return [value / length for value in vector]

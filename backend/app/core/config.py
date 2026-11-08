@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # copy runs on the same port, so there's nothing to fill in per-environment.
     ml_service_url: str = "http://localhost:8500"
 
+    # Only the dev scripts in /scripts use this, to call the running backend.
+    api_base_url: str = "http://localhost:8003"
+
     # Gates the /dev/enroll browser test harness — see
     # docs/adr/0015-dev-enrollment-harness.md. Defaults off; app/main.py only
     # imports and mounts that router when this is true, so a prod deployment
@@ -53,4 +56,44 @@ class Settings(BaseSettings):
     dev_tools_enabled: bool = False
 
 
+class SpeakerIdSettings(BaseSettings):
+    """Every number that decides who is named in a clip. PROVISIONAL: derived from 3 speakers on
+    2 device types, see docs/evaluation/segment_length.md and docs/adr/0020-speaker-matching.md.
+    Override any of them in .env as SPEAKER_ID_<NAME>, e.g. SPEAKER_ID_FLOOR_CAP=0.74. No code
+    change needed."""
+
+    model_config = SettingsConfigDict(env_file=_BACKEND_ROOT / ".env", env_prefix="SPEAKER_ID_", extra="ignore")
+
+    # Sent to the ML service with every /segments request.
+    merge_gap_sec: float = 0.3
+    min_segment_sec: float = 1.0
+    split_over_sec: float = 8.0
+    window_sec: float = 4.0
+    absorb_under_sec: float = 2.0
+
+    # A pooled run of speech is named only if best >= floor and best - runner_up >= margin,
+    # where floor = min(floor_base + floor_slope * speech_seconds, floor_cap): the more
+    # speech there is, the higher the score has to be.
+    floor_base: float = 0.55
+    floor_slope: float = 0.05
+    floor_cap: float = 0.72
+    margin: float = 0.05
+
+    # An unmatched run joins an existing "Unknown Speaker N" if it is at least this close
+    # to that group's average.
+    unknown_group_threshold: float = 0.55
+
+    # A run that is not named and has less pooled speech than this is labelled "Unclear"
+    # instead of becoming (or joining) an "Unknown Speaker N". Too little speech to say
+    # whether it is a new voice. On a 20-minute call 41 of 57 Unknown groups were single
+    # slices under 3 s (docs/evaluation/channel_mismatch_meet_call.md).
+    min_group_seconds: float = 3.0
+
+    # In a transcript, a word that falls in a gap between speech segments is attached to the
+    # nearest turn if that turn is within this many seconds, otherwise it is shown as "Unclear".
+    word_attach_max_gap_sec: float = 1.0
+
+
 settings = Settings()  # type: ignore[call-arg]  # values come from .env, not literals
+
+speaker_id_settings = SpeakerIdSettings()
