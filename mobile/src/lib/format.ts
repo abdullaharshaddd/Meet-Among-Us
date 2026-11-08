@@ -25,3 +25,15 @@ export function formatTimer(totalSeconds: number): string {
 
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
+
+// "3 d overdue", "Today", "Tomorrow", then the weekday and date.
+export function formatDue(daysFromToday: number): string {
+  if (daysFromToday < 0) return `${-daysFromToday} d overdue`;
+  if (daysFromToday === 0) return "Today";
+  if (daysFromToday === 1) return "Tomorrow";
+
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromToday);
+
+  return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}

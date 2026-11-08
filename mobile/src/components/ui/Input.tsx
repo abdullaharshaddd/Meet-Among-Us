@@ -41,6 +41,7 @@ export function Input({
   const focus = useSharedValue(0);
   const [isRevealed, setIsRevealed] = useState(false);
   const [typedText, setTypedText] = useState(defaultValue ?? "");
+  const [isFocused, setIsFocused] = useState(false);
 
   const currentText = value ?? typedText;
   const isUrdu = startsWithArabicScript(currentText);
@@ -67,7 +68,8 @@ export function Input({
           multiline && styles.multiline,
           {
             backgroundColor: colors.sunken,
-            borderColor: hasError ? colors.danger : colors.borderControl,
+            // The focus ring takes over the edge, so the two never draw a double line.
+            borderColor: hasError ? colors.danger : isFocused ? "transparent" : colors.borderControl,
             opacity: editable ? 1 : opacity.muted,
           },
         ]}
@@ -86,10 +88,12 @@ export function Input({
             onChangeText?.(text);
           }}
           onFocus={(event) => {
+            setIsFocused(true);
             moveFocus(1);
             onFocus?.(event);
           }}
           onBlur={(event) => {
+            setIsFocused(false);
             moveFocus(0);
             onBlur?.(event);
           }}

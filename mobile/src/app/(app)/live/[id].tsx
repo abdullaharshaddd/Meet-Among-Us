@@ -17,13 +17,13 @@ import {
   BilingualText,
   BottomDock,
   Button,
+  CircleButton,
   Icon,
   Screen,
   SpeakerChip,
   StopButton,
   Text,
   useToast,
-  type IconName,
 } from "@/components/ui";
 import { formatTimer } from "@/lib/format";
 import { playHaptic } from "@/lib/haptics";
@@ -73,36 +73,6 @@ function RecDot({ isPaused }: { isPaused: boolean }) {
         {isPaused ? "Paused" : "Rec"}
       </Text>
     </View>
-  );
-}
-
-function DeckButton({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
-  const { colors } = useTheme();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{ alignItems: "center", gap: space.sm, width: sizes.stopButton, marginTop: DECK_BUTTON_OFFSET }}
-    >
-      <View
-        style={{
-          width: sizes.dockSecondary,
-          height: sizes.dockSecondary,
-          borderRadius: radii.pill,
-          alignItems: "center",
-          justifyContent: "center",
-          borderWidth: borders.thin,
-          borderColor: colors.borderControl,
-        }}
-      >
-        <Icon name={icon} size="lg" />
-      </View>
-      <Text variant="label" tone="secondary">
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -243,9 +213,13 @@ export default function LiveRecordingScreen() {
 
       <BottomDock aboveTabBar={false}>
         <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <DeckButton icon={isPaused ? "play" : "pause"} label={isPaused ? "Resume" : "Pause"} onPress={togglePause} />
+          <View style={{ marginTop: DECK_BUTTON_OFFSET }}>
+            <CircleButton icon={isPaused ? "play" : "pause"} label={isPaused ? "Resume" : "Pause"} onPress={togglePause} />
+          </View>
           <StopButton onComplete={endMeeting} />
-          <DeckButton icon="bookmark" label="Mark" onPress={markMoment} />
+          <View style={{ marginTop: DECK_BUTTON_OFFSET }}>
+            <CircleButton icon="bookmark" label="Mark" onPress={markMoment} />
+          </View>
         </View>
       </BottomDock>
     </Screen>

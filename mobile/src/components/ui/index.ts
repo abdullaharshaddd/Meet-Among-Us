@@ -39,3 +39,4 @@ export type { TranscriptSpeaker, SegmentLanguage } from "./TranscriptRow";
 export { TaskRow } from "./TaskRow";
 export { ActionConfirmCard } from "./ActionConfirmCard";
 export { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+export { CircleButton } from "./CircleButton";
