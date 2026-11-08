@@ -67,6 +67,7 @@ const ROUTES = [
   { name: "live", path: "/meetings", open: /Design review/, wait: 2500 },
   { name: "meeting-detail-summary", path: "/meetings", open: /Sprint sync/ },
   { name: "meeting-detail-transcript", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, wait: 400 },
+  { name: "meeting-citation-jump", path: "/meetings", open: /Sprint sync/, then: { text: "Sprint sync · 03:24" }, wait: 900 },
   { name: "meeting-rename-sheet", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, click: { label: /Unknown Speaker 1/ } },
   { name: "assistant", path: "/assistant" },
   { name: "assistant-chat", path: "/assistant", type: "Create a task from the vendor call", wait: 2200 },
@@ -157,6 +158,10 @@ async function run() {
           await page.waitForTimeout(1500);
         }
 
+        if (route.then?.tab) {
+          await page.getByRole("tab", { name: route.then.tab }).first().click();
+          await page.waitForTimeout(700);
+        }
         if (route.click) {
           await page.getByRole("button", { name: route.click.label }).first().click();
           await page.waitForTimeout(1300);
@@ -164,10 +169,6 @@ async function run() {
         if (route.then?.text) {
           await page.getByText(route.then.text, { exact: true }).first().click();
           await page.waitForTimeout(1300);
-        }
-        if (route.then?.tab) {
-          await page.getByRole("tab", { name: route.then.tab }).first().click();
-          await page.waitForTimeout(700);
         }
         if (route.type) {
           await page.getByRole("textbox").last().fill(route.type);

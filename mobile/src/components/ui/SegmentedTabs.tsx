@@ -17,22 +17,41 @@ export interface SegmentedTabsProps<Key extends string> {
   onChange: (key: Key) => void;
 }
 
+interface Slot {
+  x: number;
+  width: number;
+}
+
 export function SegmentedTabs<Key extends string>({ options, value, onChange }: SegmentedTabsProps<Key>) {
   const { colors } = useTheme();
-  const [trackWidth, setTrackWidth] = useState(0);
-  const slide = useSharedValue(0);
+  // Each segment is as wide as its label needs, with the spare room shared out evenly,
+  // so "Action items" never gets squeezed. The raised pill follows the measured slots.
+  const [slots, setSlots] = useState<Record<string, Slot>>({});
+  const slideX = useSharedValue(0);
+  const slideWidth = useSharedValue(0);
+  const hasPlaced = useSharedValue(false);
 
-  const selectedIndex = Math.max(0, options.findIndex((option) => option.key === value));
-  const segmentWidth = trackWidth > 0 ? (trackWidth - space.xs * 2) / options.length : 0;
-
-  // The raised pill slides to the chosen segment instead of jumping.
-  const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: slide.value }],
-  }));
+  const slot = slots[value];
 
   useEffect(() => {
-    if (segmentWidth > 0) slide.value = withSpring(selectedIndex * segmentWidth, motion.spring.chip);
-  }, [selectedIndex, segmentWidth, slide]);
+    if (!slot) return;
+
+    // The first placement is instant, so the pill doesn't slide in from the corner.
+    if (!hasPlaced.value) {
+      slideX.value = slot.x + space.xxs;
+      slideWidth.value = slot.width - space.xxs * 2;
+      hasPlaced.value = true;
+      return;
+    }
+
+    slideX.value = withSpring(slot.x + space.xxs, motion.spring.chip);
+    slideWidth.value = withSpring(slot.width - space.xxs * 2, motion.spring.chip);
+  }, [slot, slideX, slideWidth, hasPlaced]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    width: slideWidth.value,
+    transform: [{ translateX: slideX.value }],
+  }));
 
   const choose = (key: Key) => {
     if (key === value) return;
@@ -41,21 +60,21 @@ export function SegmentedTabs<Key extends string>({ options, value, onChange }: 
     onChange(key);
   };
 
+  const extraHit = (sizes.hitMin - sizes.segmentedHeight) / 2;
+
   return (
     <View
       accessibilityRole="tablist"
-      onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
       style={{
         flexDirection: "row",
         height: sizes.segmentedHeight,
-        padding: space.xs,
         borderRadius: radii.md,
         backgroundColor: colors.sunken,
         borderWidth: borders.hairline,
         borderColor: colors.border,
       }}
     >
-      {segmentWidth > 0 && (
+      {slot && (
         <Animated.View
           pointerEvents="none"
           style={[
@@ -63,8 +82,7 @@ export function SegmentedTabs<Key extends string>({ options, value, onChange }: 
               position: "absolute",
               top: space.xs,
               bottom: space.xs,
-              left: space.xs,
-              width: segmentWidth,
+              left: 0,
               borderRadius: radii.sm,
               backgroundColor: colors.raised,
               borderWidth: borders.hairline,
@@ -85,16 +103,16 @@ export function SegmentedTabs<Key extends string>({ options, value, onChange }: 
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={option.label}
             onPress={() => choose(option.key)}
-            hitSlop={{ top: (sizes.hitMin - sizes.segmentedHeight) / 2, bottom: (sizes.hitMin - sizes.segmentedHeight) / 2 }}
-            style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: space.xxs }}
+            onLayout={(event) => {
+              const { x, width } = event.nativeEvent.layout;
+              const known = slots[option.key];
+
+              if (!known || known.x !== x || known.width !== width) setSlots((current) => ({ ...current, [option.key]: { x, width } }));
+            }}
+            hitSlop={{ top: extraHit, bottom: extraHit }}
+            style={{ flexGrow: 1, flexShrink: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: space.sm }}
           >
-            <Text
-              variant="subhead"
-              tone={isSelected ? "primary" : "secondary"}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.85}
-            >
+            <Text variant="subhead" tone={isSelected ? "primary" : "secondary"} numberOfLines={1}>
               {option.label}
             </Text>
           </Pressable>
