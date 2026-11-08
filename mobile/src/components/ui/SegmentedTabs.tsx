@@ -86,7 +86,7 @@ export function SegmentedTabs<Key extends string>({ options, value, onChange }: 
             accessibilityLabel={option.label}
             onPress={() => choose(option.key)}
             hitSlop={{ top: (sizes.hitMin - sizes.segmentedHeight) / 2, bottom: (sizes.hitMin - sizes.segmentedHeight) / 2 }}
-            style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: space.xs }}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: space.xxs }}
           >
             <Text
               variant="subhead"

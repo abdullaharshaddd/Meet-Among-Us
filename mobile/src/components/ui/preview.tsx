@@ -4,25 +4,9 @@ import { useState, type ReactNode } from "react";
 import { Text as RNText, View } from "react-native";
 import { useTheme } from "@/theme/ThemeProvider";
 import { layout, space, type } from "@/theme/tokens";
+import { MorePreviews } from "./preview2";
+import { Section } from "./PreviewSection";
 import { Avatar, AvatarStack, Badge, BilingualText, Button, Card, Input, SpeakerChip, Text, UnknownSpeakerChip, type StackPerson } from "./index";
-
-function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
-  return (
-    <View style={{ gap: space.md }}>
-      <View style={{ gap: space.xs }}>
-        <Text variant="label" tone="secondary">
-          {title}
-        </Text>
-        {note && (
-          <Text variant="caption" tone="secondary">
-            {note}
-          </Text>
-        )}
-      </View>
-      {children}
-    </View>
-  );
-}
 
 function ButtonPreview() {
   const [isSaving, setIsSaving] = useState(false);
@@ -352,6 +336,7 @@ export function ComponentPreviews() {
       <BidiTestPreview />
       <BadgePreview />
       <SpeakerPreview />
+      <MorePreviews />
     </>
   );
 }

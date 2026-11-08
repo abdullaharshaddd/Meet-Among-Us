@@ -56,7 +56,7 @@ const ENROLLMENT = {
 // Each entry: where to go once signed in, and what to do before the picture.
 const ROUTES = [
   { name: "login", auth: false, path: "/" },
-  { name: "design-system", auth: false, path: "/design-system", scrolls: 4 },
+  { name: "design-system", auth: false, path: "/design-system", scrolls: 14 },
   { name: "meetings", path: "/meetings" },
   { name: "meetings-not-enrolled", path: "/meetings", enrolled: false },
   { name: "meetings-scrolled", path: "/meetings", scrollBy: 500 },
@@ -64,10 +64,10 @@ const ROUTES = [
   { name: "meetings-project-sheet", path: "/meetings", click: { label: "Start meeting" } },
   { name: "meetings-consent-sheet", path: "/meetings", click: { label: "Start meeting" }, then: { text: "Continue" } },
   { name: "meetings-empty", path: "/meetings", click: { label: /Workspace Orbit Labs/ }, then: { text: "Thesis group" } },
-  { name: "live", path: "/live/meeting-design-review", wait: 2500 },
-  { name: "meeting-detail-summary", path: "/meetings/meeting-sprint-sync" },
-  { name: "meeting-detail-transcript", path: "/meetings/meeting-sprint-sync", then: { tab: "Transcript" }, wait: 400 },
-  { name: "meeting-rename-sheet", path: "/meetings/meeting-sprint-sync", then: { tab: "Transcript" }, click: { label: /Unknown Speaker 1/ } },
+  { name: "live", path: "/meetings", open: /Design review/, wait: 2500 },
+  { name: "meeting-detail-summary", path: "/meetings", open: /Sprint sync/ },
+  { name: "meeting-detail-transcript", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, wait: 400 },
+  { name: "meeting-rename-sheet", path: "/meetings", open: /Sprint sync/, then: { tab: "Transcript" }, click: { label: /Unknown Speaker 1/ } },
   { name: "assistant", path: "/assistant" },
   { name: "assistant-chat", path: "/assistant", type: "Create a task from the vendor call", wait: 2200 },
   { name: "tasks", path: "/tasks" },
@@ -149,6 +149,12 @@ async function run() {
         } else {
           await signIn(page);
           await goTo(page, route.path);
+        }
+
+        // Pages with a dynamic id are reached by tapping, the way a person would.
+        if (route.open) {
+          await page.getByRole("button", { name: route.open }).first().click();
+          await page.waitForTimeout(1500);
         }
 
         if (route.click) {
