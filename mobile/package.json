@@ -55,6 +55,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "generate:passages": "node scripts/generatePassages.mjs",
     "generate:types": "uv run --directory ../backend python -c \"import json,sys; from app.main import app; json.dump(app.openapi(), sys.stdout)\" > openapi.schema.json && npx openapi-typescript openapi.schema.json -o src/api/types.gen.ts"
   },
   "private": true
