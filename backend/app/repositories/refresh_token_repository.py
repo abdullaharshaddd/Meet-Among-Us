@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 from uuid6 import uuid7
 
@@ -44,3 +44,12 @@ def revoke_family(db: Session, family_id: UUID) -> None:
         .values(revoked_at=datetime.now(timezone.utc))
     )
     db.commit()
+
+
+def delete_expired(db: Session, now: datetime) -> int:
+    """Removes tokens whose own expiry has passed. They can no longer be used, so the rows only take space.
+    Returns how many were removed."""
+    result = db.execute(delete(RefreshToken).where(RefreshToken.expires_at < now))
+    db.commit()
+
+    return result.rowcount

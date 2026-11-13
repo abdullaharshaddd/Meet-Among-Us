@@ -41,3 +41,29 @@ def test_the_version_the_backend_requires_is_one_the_ml_source_declares() -> Non
 
     # If this fails, the backend now needs something the ML service does not offer yet.
     assert ml_client.REQUIRED_ML_API_VERSION <= declared
+
+
+def test_only_expired_refresh_tokens_are_purged(client, db) -> None:
+    import uuid
+    from datetime import datetime, timedelta, timezone
+
+    from app.models.refresh_token import RefreshToken
+    from app.repositories import refresh_token_repository
+
+    tokens = client.post(
+        "/auth/signup", json={"email": f"{uuid.uuid4()}@example.com", "password": "correct horse", "display_name": "Tester"}
+    ).json()
+    user_id = uuid.UUID(tokens["user"]["id"])
+    now = datetime.now(timezone.utc)
+    old_id, fresh_id = uuid.uuid4(), uuid.uuid4()
+    db.add(RefreshToken(id=old_id, user_id=user_id, family_id=old_id, expires_at=now - timedelta(days=1)))
+    db.add(RefreshToken(id=fresh_id, user_id=user_id, family_id=fresh_id, expires_at=now + timedelta(days=1)))
+    db.commit()
+
+    removed = refresh_token_repository.delete_expired(db, now)
+
+    assert removed == 1
+    assert db.get(RefreshToken, old_id) is None
+    assert db.get(RefreshToken, fresh_id) is not None
+    # The token the signup just issued is still live too.
+    assert db.query(RefreshToken).filter(RefreshToken.user_id == user_id).count() == 2

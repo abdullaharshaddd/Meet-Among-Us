@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
@@ -17,13 +18,17 @@ from app.routers.join_page import router as join_page_router
 from app.routers.meetings import router as meetings_router
 from app.routers.workspaces import router as workspaces_router
 from app.schemas.health import HealthResponse
-from app.startup import run_startup_checks
+from app.startup import keep_purging_expired_tokens, run_startup_checks
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     run_startup_checks()
+    purge_task = asyncio.create_task(keep_purging_expired_tokens())
+
     yield
+
+    purge_task.cancel()
 
 
 app = FastAPI(title="AI Meeting Intelligence Agent", lifespan=lifespan)
