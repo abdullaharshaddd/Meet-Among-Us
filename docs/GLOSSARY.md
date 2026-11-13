@@ -144,3 +144,11 @@ Plain-English definitions, added the first time each term is used in code.
 - **Bottom sheet** — a panel that slides up from the bottom of the screen over a dimmed background and can be dragged down to close.
 - **Hold to confirm** — a button that only acts after being pressed for a set time, shown by a ring filling up, used for things that cannot be undone like ending a meeting.
 - **Citation chip** — a small tag on an assistant answer that names the meeting and moment the answer came from, and jumps there when tapped.
+- **LLM (large language model)** — a program trained on a huge amount of text that writes a reply to whatever text you give it; here it reads a transcript and writes the summary.
+- **Prompted baseline** — the result you get from an LLM using only written instructions, with no extra training; it is the score a trained model has to beat.
+- **Groundedness** — whether every statement in a summary is actually backed by the words in the transcript it points to.
+- **Turn citation** — the number of a transcript line attached to a claim, so you can open that line and check the claim.
+- **JSON mode** — a setting that makes the LLM reply in a strict, machine-readable format instead of free-form prose.
+- **Tokens per minute (TPM)** — the cap on how much text a free API account may send and receive each minute, counted in small pieces of words called tokens.
+- **ROUGE** — a score for how many words and short word-runs a written summary shares with a human-written one.
+- **BERTScore** — a score for how close in meaning a written summary is to a human-written one, judged by a language model instead of by exact words.
