@@ -93,3 +93,16 @@ def delete_prefix(prefix: str) -> int:
         delete_objects(keys[start : start + 1000])
 
     return len(keys)
+
+
+def object_size(key: str) -> int | None:
+    """The size of an uploaded object in bytes, or None when nothing was uploaded under that key."""
+    try:
+        head = _get_client().head_object(Bucket=settings.r2_bucket_name, Key=key)
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+            return None
+
+        raise
+
+    return head["ContentLength"]

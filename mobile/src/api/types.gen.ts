@@ -397,6 +397,229 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces/{workspace_id}/meetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Meetings */
+        get: operations["list_meetings_workspaces__workspace_id__meetings_get"];
+        put?: never;
+        /** Create Meeting */
+        post: operations["create_meeting_workspaces__workspace_id__meetings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/consent-notice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consent Notice */
+        get: operations["consent_notice_meetings_consent_notice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Meeting */
+        get: operations["get_meeting_meetings__meeting_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Meeting Status */
+        get: operations["get_meeting_status_meetings__meeting_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Attendee */
+        post: operations["add_attendee_meetings__meeting_id__attendees_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees/{attendee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Attendee */
+        delete: operations["remove_attendee_meetings__meeting_id__attendees__attendee_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees/{attendee_id}/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Consent */
+        put: operations["set_consent_meetings__meeting_id__attendees__attendee_id__consent_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/audio/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Audio Upload */
+        post: operations["request_audio_upload_meetings__meeting_id__audio_upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/audio/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Audio Uploaded */
+        post: operations["confirm_audio_uploaded_meetings__meeting_id__audio_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Processing */
+        post: operations["retry_processing_meetings__meeting_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/speaker-renames/{unknown_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename Speaker */
+        put: operations["rename_speaker_meetings__meeting_id__speaker_renames__unknown_number__put"];
+        post?: never;
+        /** Clear Rename */
+        delete: operations["clear_rename_meetings__meeting_id__speaker_renames__unknown_number__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/action-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tasks */
+        get: operations["list_tasks_me_action_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/action-items/{action_item_id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Action Item Done */
+        put: operations["set_action_item_done_action_items__action_item_id__done_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dev/enroll/api/samples": {
         parameters: {
             query?: never;
@@ -474,6 +697,37 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** ActionItemResponse */
+        ActionItemResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string;
+            /** Deadline Text */
+            deadline_text: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
+            /** Done */
+            done: boolean;
+            /** Done At */
+            done_at: string | null;
+        };
+        /** AddAttendeeRequest */
+        AddAttendeeRequest: {
+            /** User Id */
+            user_id?: string | null;
+            /** Guest Name */
+            guest_name?: string | null;
+        };
         /** AdminUserRow */
         AdminUserRow: {
             /** Email */
@@ -491,6 +745,44 @@ export interface components {
             /** Centroid L2 Norm */
             centroid_l2_norm: number | null;
         };
+        /** AttendeeResponse */
+        AttendeeResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "member" | "guest" | "former_member";
+            /** Name */
+            name: string;
+            /** User Id */
+            user_id: string | null;
+            /** Is Host */
+            is_host: boolean;
+            /** Enrolled */
+            enrolled: boolean | null;
+            consent: components["schemas"]["ConsentResponse"] | null;
+        };
+        /**
+         * AudioFormat
+         * @enum {string}
+         */
+        AudioFormat: "flac" | "wav" | "m4a" | "webm" | "ogg";
+        /** AudioResponse */
+        AudioResponse: {
+            /** Uploaded */
+            uploaded: boolean;
+            /** Uploaded At */
+            uploaded_at: string | null;
+            /** Size Bytes */
+            size_bytes: number | null;
+            /** Duration Sec */
+            duration_sec: number | null;
+        };
         /**
          * Citation
          * @description A transcript turn that backs a claim, so the claim can be checked.
@@ -503,6 +795,15 @@ export interface components {
             /** Speaker Label */
             speaker_label: string;
         };
+        /** CitationResponse */
+        CitationResponse: {
+            /** Turn Number */
+            turn_number: number;
+            /** Start */
+            start: number;
+            /** Speaker Name */
+            speaker_name: string;
+        };
         /** ClipUploadRequest */
         ClipUploadRequest: {
             /**
@@ -512,15 +813,78 @@ export interface components {
              */
             audio_format: "flac" | "wav" | "m4a" | "webm" | "ogg";
         };
+        /**
+         * ConsentMethod
+         * @enum {string}
+         */
+        ConsentMethod: "in_app" | "verbal_attested_by_host";
+        /** ConsentNoticeResponse */
+        ConsentNoticeResponse: {
+            /** Version */
+            version: string;
+            /** Title */
+            title: string;
+            /** Paragraphs */
+            paragraphs: string[];
+        };
+        /** ConsentRequest */
+        ConsentRequest: {
+            /** Granted */
+            granted: boolean;
+        };
+        /** ConsentResponse */
+        ConsentResponse: {
+            /** Granted */
+            granted: boolean;
+            method: components["schemas"]["ConsentMethod"];
+            /**
+             * Granted At
+             * Format: date-time
+             */
+            granted_at: string;
+        };
         /** CreateInviteRequest */
         CreateInviteRequest: {
             /** Email */
             email: string;
         };
+        /** CreateMeetingRequest */
+        CreateMeetingRequest: {
+            /** Title */
+            title: string;
+            /**
+             * Attendee User Ids
+             * @default []
+             */
+            attendee_user_ids: string[];
+            /**
+             * Guest Names
+             * @default []
+             */
+            guest_names: string[];
+        };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             /** Name */
             name: string;
+        };
+        /** DecisionResponse */
+        DecisionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Decision */
+            decision: string;
+            /** Decided By */
+            decided_by: string;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
         };
         /** DiagnosticsResponse */
         DiagnosticsResponse: {
@@ -562,6 +926,11 @@ export interface components {
             /** Passages */
             passages: components["schemas"]["PassageStatus"][];
         };
+        /**
+         * FailedStep
+         * @enum {string}
+         */
+        FailedStep: "transcript" | "summary";
         /** GoogleSignInRequest */
         GoogleSignInRequest: {
             /** Id Token */
@@ -664,6 +1033,119 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MeetingDetailResponse */
+        MeetingDetailResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** Title */
+            title: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Host Name */
+            host_name: string;
+            /** Is Host */
+            is_host: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Attendees */
+            attendees: components["schemas"]["AttendeeResponse"][];
+            /** Warnings */
+            warnings: string[];
+            /** Consent Ready */
+            consent_ready: boolean;
+            /** Waiting For Consent */
+            waiting_for_consent: string[];
+            audio: components["schemas"]["AudioResponse"];
+            /** Transcript */
+            transcript: components["schemas"]["SegmentResponse"][];
+            summary: components["schemas"]["SummaryResponse"] | null;
+        };
+        /** MeetingListItem */
+        MeetingListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** Title */
+            title: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Host Name */
+            host_name: string;
+            /** Attendee Count */
+            attendee_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * MeetingStatus
+         * @enum {string}
+         */
+        MeetingStatus: "waiting_for_audio" | "processing" | "done" | "failed";
+        /**
+         * MeetingStatusResponse
+         * @description What the app polls. Small on purpose.
+         */
+        MeetingStatusResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Audio Uploaded */
+            audio_uploaded: boolean;
+            /** Consent Ready */
+            consent_ready: boolean;
+            /** Transcript Ready */
+            transcript_ready: boolean;
+            /** Summary Ready */
+            summary_ready: boolean;
+        };
+        /** MeetingUploadUrlRequest */
+        MeetingUploadUrlRequest: {
+            audio_format: components["schemas"]["AudioFormat"];
+        };
+        /** MeetingUploadUrlResponse */
+        MeetingUploadUrlResponse: {
+            /** Upload Url */
+            upload_url: string;
+            /** Audio Key */
+            audio_key: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
+            /** Max Bytes */
+            max_bytes: number;
+            /** Max Duration Sec */
+            max_duration_sec: number;
+        };
         /** PassageContent */
         PassageContent: {
             language: components["schemas"]["EnrollmentLanguage"];
@@ -709,6 +1191,13 @@ export interface components {
             /** Refresh Token */
             refresh_token: string;
         };
+        /** RenameSpeakerRequest */
+        RenameSpeakerRequest: {
+            /** Attendee Id */
+            attendee_id?: string | null;
+            /** Guest Name */
+            guest_name?: string | null;
+        };
         /** SampleMeasurement */
         SampleMeasurement: {
             /** Language */
@@ -723,6 +1212,28 @@ export interface components {
             speech_duration_sec: number;
             /** Snr Db */
             snr_db: number;
+        };
+        /** SegmentResponse */
+        SegmentResponse: {
+            /** Position */
+            position: number;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Text */
+            text: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "ur" | "en" | "mixed" | "unknown";
+            speaker: components["schemas"]["SpeakerRef"];
+        };
+        /** SetDoneRequest */
+        SetDoneRequest: {
+            /** Done */
+            done: boolean;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -746,6 +1257,22 @@ export interface components {
             model_version: string;
             /** Reason */
             reason: string;
+        };
+        /** SpeakerRef */
+        SpeakerRef: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "member" | "guest" | "former_member" | "unknown" | "unclear";
+            /** Name */
+            name: string;
+            /** User Id */
+            user_id: string | null;
+            /** Attendee Id */
+            attendee_id: string | null;
+            /** Unknown Number */
+            unknown_number: number | null;
         };
         /** SpeakerTurn */
         SpeakerTurn: {
@@ -818,6 +1345,8 @@ export interface components {
             model: string;
             /** Attempts */
             attempts: number;
+            /** Parts */
+            parts: number;
             /** Dropped Decisions */
             dropped_decisions: number;
             /** Dropped Action Items */
@@ -860,6 +1389,36 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /** SummaryPointResponse */
+        SummaryPointResponse: {
+            /** Text */
+            text: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummaryResponse */
+        SummaryResponse: {
+            /** Engine */
+            engine: string;
+            /** Model */
+            model: string;
+            /** Parts */
+            parts: number;
+            /** Dropped Decisions */
+            dropped_decisions: number;
+            /** Dropped Action Items */
+            dropped_action_items: number;
+            /** Sentences */
+            sentences: components["schemas"]["SummaryPointResponse"][];
+            /** Key Points */
+            key_points: components["schemas"]["SummaryPointResponse"][];
+            /** Decisions */
+            decisions: components["schemas"]["DecisionResponse"][];
+            /** Action Items */
+            action_items: components["schemas"]["ActionItemResponse"][];
+        };
         /** SummarySentence */
         SummarySentence: {
             /** Text */
@@ -881,6 +1440,40 @@ export interface components {
             start: number;
             /** Text */
             text: string;
+        };
+        /** TaskResponse */
+        TaskResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string;
+            /** Deadline Text */
+            deadline_text: string | null;
+            /** Done */
+            done: boolean;
+            /** Done At */
+            done_at: string | null;
+            /**
+             * Meeting Id
+             * Format: uuid
+             */
+            meeting_id: string;
+            /** Meeting Title */
+            meeting_title: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** First Turn Number */
+            first_turn_number: number | null;
+            /** First Turn Start */
+            first_turn_start: number | null;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -1831,6 +2424,488 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_meetings_workspaces__workspace_id__meetings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingListItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_meeting_workspaces__workspace_id__meetings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMeetingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consent_notice_meetings_consent_notice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentNoticeResponse"];
+                };
+            };
+        };
+    };
+    get_meeting_meetings__meeting_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_meeting_status_meetings__meeting_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_attendee_meetings__meeting_id__attendees_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddAttendeeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_attendee_meetings__meeting_id__attendees__attendee_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                attendee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_consent_meetings__meeting_id__attendees__attendee_id__consent_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                attendee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_audio_upload_meetings__meeting_id__audio_upload_url_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetingUploadUrlRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingUploadUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_audio_uploaded_meetings__meeting_id__audio_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_processing_meetings__meeting_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_speaker_meetings__meeting_id__speaker_renames__unknown_number__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                unknown_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameSpeakerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_rename_meetings__meeting_id__speaker_renames__unknown_number__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                unknown_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tasks_me_action_items_get: {
+        parameters: {
+            query?: {
+                workspace_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_action_item_done_action_items__action_item_id__done_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDoneRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
                 };
             };
             /** @description Validation Error */

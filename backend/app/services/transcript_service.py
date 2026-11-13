@@ -120,6 +120,21 @@ def transcribe(
     participant_ids = speaker_id_service.require_participants(db, workspace_id, participant_user_ids)
     audio_bytes = storage.get_object_bytes(audio_key)
 
+    return transcribe_audio(db, workspace_id, audio_bytes, engine, language, participant_ids, settings)
+
+
+def transcribe_audio(
+    db: Session,
+    workspace_id: UUID,
+    audio_bytes: bytes,
+    engine: str | None,
+    language: str,
+    participant_ids: set[UUID] | None,
+    settings: SpeakerIdSettings = speaker_id_settings,
+) -> TranscribeResponse:
+    """The work itself, without the clip and membership checks. Meeting processing calls this directly,
+    because it has already checked that the audio belongs to the meeting."""
+
     # Transcribing first, so a missing API key fails before the slower speaker work starts.
     transcript = ml_client.transcribe(audio_bytes, engine, language)
     identified = speaker_id_service.identify_audio(db, workspace_id, audio_bytes, settings, participant_ids)

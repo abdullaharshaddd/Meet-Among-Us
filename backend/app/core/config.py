@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 30
 
+    # Meeting recordings. The size limit is checked when the app confirms the upload, the duration
+    # limit when the audio is decoded during processing.
+    meeting_audio_max_bytes: int = 150_000_000
+    meeting_max_duration_sec: int = 1800
+    # A transcript longer than this is summarized in parts. Groq's free tier takes about 8,000 tokens
+    # a minute, and Urdu text costs roughly one token per two characters.
+    summary_part_max_chars: int = 6000
+
     # R2 is S3-compatible; boto3 talks to it via endpoint_url alone (app/core/storage.py).
     # Required (no default) like the other real secrets above — but note .env can still
     # hold them empty during dev, since Settings doesn't validate non-emptiness.

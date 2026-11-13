@@ -1,0 +1,12 @@
+{
+  "version": "2026-11-v1",
+  "title": "Before this meeting is recorded",
+  "paragraphs": [
+    "This meeting will be recorded. Everyone listed as an attendee has to agree before the recording is processed.",
+    "The recording is stored on Cloudflare R2. To turn it into text, the audio is sent to an outside speech-to-text service: Groq, or ElevenLabs when that engine is chosen.",
+    "The written transcript is then sent to an outside AI service to write the summary, decisions and action items: Groq, or Google Gemini when that engine is chosen.",
+    "Attendees who enrolled their voice are recognised by matching it against their voiceprint. That matching runs on our own server.",
+    "Only the host and the people listed as attendees can see the transcript and summary.",
+    "If you do not agree, tell the host. They can remove you from the meeting before it is recorded."
+  ]
+}

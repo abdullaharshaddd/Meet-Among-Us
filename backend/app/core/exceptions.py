@@ -158,3 +158,57 @@ class AlreadyWorkspaceMemberError(AppError):
     """The invited email already belongs to a member of this workspace."""
 
     status_code = 409
+
+
+class MeetingNotFoundError(AppError):
+    """Also used when the caller may not see the meeting, so a response never confirms it exists."""
+
+    status_code = 404
+
+
+class AttendeeNotFoundError(AppError):
+    status_code = 404
+
+
+class InvalidAttendeeError(AppError):
+    """An attendee that cannot be added: not a member of the workspace, or a bad guest name."""
+
+    status_code = 422
+
+
+class DuplicateAttendeeError(AppError):
+    status_code = 409
+
+
+class CannotRemoveHostError(AppError):
+    status_code = 409
+
+
+class MeetingLockedError(AppError):
+    """The meeting is processing or done, so attendees, consent and audio can no longer change."""
+
+    status_code = 409
+
+
+class ConsentMissingError(AppError):
+    """Processing needs every attendee's consent. The message names who is missing."""
+
+    status_code = 409
+
+
+class AudioNotUploadedError(AppError):
+    status_code = 409
+
+
+class AudioTooLargeError(AppError):
+    status_code = 413
+
+
+class NothingToRetryError(AppError):
+    status_code = 409
+
+
+class CannotConsentForError(AppError):
+    """Only you can agree for yourself. The host can only answer for a named guest."""
+
+    status_code = 403

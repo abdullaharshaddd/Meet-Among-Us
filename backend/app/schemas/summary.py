@@ -68,6 +68,7 @@ class SummarizeResponse(BaseModel):
     engine: str
     model: str
     attempts: int  # 2 means the first reply failed the checks and the retry passed
+    parts: int  # 1 for one request, more when a long transcript was summarized in parts and merged
     # Items the model listed that the transcript did not back (the quote was not in the turns it cited).
     dropped_decisions: int
     dropped_action_items: int

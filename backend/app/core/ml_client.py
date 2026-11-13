@@ -175,6 +175,7 @@ class MLDecision(BaseModel):
     turns: list[int]
     quote: str
     warnings: list[str]
+    unnamed_label: str | None = None  # "Unknown Speaker 2" when decided_by was replaced
 
 
 class MLActionItem(BaseModel):
@@ -184,6 +185,7 @@ class MLActionItem(BaseModel):
     turns: list[int]
     quote: str
     warnings: list[str]
+    unnamed_label: str | None = None  # "Unknown Speaker 2" when owner was replaced
 
 
 class MLSummary(BaseModel):
@@ -195,6 +197,7 @@ class MLSummary(BaseModel):
     attempts: int
     dropped_decisions: int
     dropped_action_items: int
+    parts: int = 1  # set by the backend when a long transcript was summarized in parts
     summary: list[MLPoint]
     key_points: list[MLPoint]
     decisions: list[MLDecision]
@@ -229,3 +232,37 @@ def summarize(turns: list[dict], engine: str | None) -> MLSummary:
         raise SummaryFailedError(detail)
 
     return MLSummary.model_validate(response.json())
+
+
+# Bump together with API_VERSION in ml/ml/service.py when the backend starts to need something new.
+REQUIRED_ML_API_VERSION = 2
+
+
+def ml_api_version() -> int | None:
+    """The ML service's API version, or None when it is unreachable or too old to say."""
+    try:
+        response = requests.get(f"{settings.ml_service_url}/version", timeout=5)
+    except requests.RequestException:
+        return None
+
+    if not response.ok:
+        return None  # a service from before /version existed
+
+    return int(response.json().get("api_version", 0))
+
+
+def audio_duration_sec(audio_bytes: bytes) -> float:
+    try:
+        response = requests.post(
+            f"{settings.ml_service_url}/duration",
+            data=audio_bytes,
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=120,
+        )
+    except requests.RequestException as exc:
+        raise MLServiceUnavailableError(f"Speech service unreachable: {exc}") from exc
+
+    if not response.ok:
+        raise TranscriptionFailedError(_error_detail(response))
+
+    return float(response.json()["duration_sec"])
