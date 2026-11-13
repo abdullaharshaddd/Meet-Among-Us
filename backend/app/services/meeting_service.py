@@ -239,8 +239,10 @@ def request_audio_upload(
 ) -> MeetingUploadUrlResponse:
     meeting = permissions.require_meeting_host(db, meeting_id, user.id)
     _require_editable(meeting)
+    # Nothing is recorded or stored for a meeting until everyone in it has agreed, so this comes first.
+    _require_consent(db, meeting)
     previous = meeting_repository.get_audio(db, meeting.id)
-    audio_key = f"meetings/{meeting.id}/{uuid4()}.{audio_format.value}"
+    audio_key =f"meetings/{meeting.id}/{uuid4()}.{audio_format.value}"
 
     if previous is not None:
         # New audio means the old transcript and summary no longer describe this meeting.
@@ -274,6 +276,7 @@ def confirm_audio_uploaded(db: Session, user: User, meeting_id: UUID) -> tuple[M
     if meeting.status in (MeetingStatus.PROCESSING, MeetingStatus.DONE):
         return meeting_view.build_status(db, meeting), False
 
+    _require_consent(db, meeting)
     audio = meeting_repository.get_audio(db, meeting.id)
 
     if audio is None:
@@ -290,7 +293,6 @@ def confirm_audio_uploaded(db: Session, user: User, meeting_id: UUID) -> tuple[M
         db.commit()
         raise AudioTooLargeError(f"That file is larger than the {settings.meeting_audio_max_bytes // 1_000_000} MB limit.")
 
-    _require_consent(db, meeting)
     audio.size_bytes = size
     audio.uploaded_at = _now()
     _start_processing(meeting)

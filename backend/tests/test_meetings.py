@@ -264,6 +264,24 @@ def test_complete_refuses_an_oversize_file_and_deletes_it(client: TestClient, wo
     assert _meeting_status(client, host, meeting["id"])["audio_uploaded"] is False
 
 
+def test_no_upload_url_is_given_until_everyone_has_agreed_and_it_names_who_has_not(client: TestClient, world: World) -> None:
+    host = _signup(client, "Host")
+    sara = _signup(client, "Sara")
+    workspace = _workspace(client, host)
+    _join(client, workspace, sara)
+    meeting = _create_meeting(client, host, workspace, [sara], guests=["Imran"])
+    client.put(
+        f"/meetings/{meeting['id']}/attendees/{_attendee(meeting, 'Host')['id']}/consent", json={"granted": True}, headers=_auth(host)
+    )
+
+    refused = client.post(f"/meetings/{meeting['id']}/audio/upload-url", json={"audio_format": "flac"}, headers=_auth(host))
+
+    assert refused.status_code == 409
+    assert "Sara" in refused.json()["detail"] and "Imran" in refused.json()["detail"]
+    assert "Host" not in refused.json()["detail"]
+    assert _meeting_status(client, host, meeting["id"])["audio_uploaded"] is False
+
+
 def test_complete_does_not_start_without_everyones_consent_and_can_be_called_again(client: TestClient, world: World) -> None:
     host = _signup(client, "Host")
     sara = _signup(client, "Sara")
@@ -274,7 +292,7 @@ def test_complete_does_not_start_without_everyones_consent_and_can_be_called_aga
         f"/meetings/{meeting['id']}/attendees/{_attendee(meeting, 'Host')['id']}/consent", json={"granted": True}, headers=_auth(host)
     )
 
-    blocked = _upload_and_complete(client, host, meeting)
+    blocked = client.post(f"/meetings/{meeting['id']}/audio/complete", headers=_auth(host))
 
     assert blocked.status_code == 409 and "Sara" in blocked.json()["detail"]
     assert world.transcribe_calls == []
@@ -284,7 +302,7 @@ def test_complete_does_not_start_without_everyones_consent_and_can_be_called_aga
         f"/meetings/{meeting['id']}/attendees/{_attendee(meeting, 'Sara')['id']}/consent", json={"granted": True}, headers=_auth(sara)
     )
     world.entries = [_entry("Host", uuid.UUID(_user_id(host)), 1.0, "hello")]
-    started = client.post(f"/meetings/{meeting['id']}/audio/complete", headers=_auth(host))
+    started = _upload_and_complete(client, host, meeting)
 
     assert started.status_code == 202
     assert _meeting_status(client, host, meeting["id"])["status"] == "done"
