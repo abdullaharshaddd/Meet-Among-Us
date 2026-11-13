@@ -3,7 +3,13 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.core import join_code
-from app.core.exceptions import CodeJoiningDisabledError, InvalidJoinCodeError
+from app.core.exceptions import (
+    CodeJoiningDisabledError,
+    InvalidJoinCodeError,
+    InvalidRoleChangeError,
+    MemberNotFoundError,
+    OwnerCannotLeaveError,
+)
 from app.models.user import User
 from app.models.workspace import Workspace, WorkspaceMember, WorkspaceRole
 from app.repositories import workspace_member_repository, workspace_repository
@@ -99,3 +105,74 @@ def join_by_code(db: Session, user: User, raw_code: str) -> WorkspaceResponse:
     )
 
     return to_response(workspace, member)
+
+
+def _member_response(workspace_id: UUID, db: Session, viewer: WorkspaceMember, target_user_id: UUID) -> WorkspaceMemberResponse:
+    for member, member_user in workspace_member_repository.list_with_users(db, workspace_id):
+        if member.user_id == target_user_id:
+            return WorkspaceMemberResponse(
+                user_id=member.user_id,
+                display_name=member_user.display_name,
+                email=member_user.email if viewer.role == WorkspaceRole.OWNER else None,
+                role=member.role,
+                can_create_projects=permissions.can_create_projects(member),
+                joined_at=member.joined_at,
+            )
+
+    raise MemberNotFoundError("That person is not a member of this workspace.")
+
+
+def change_role(db: Session, user: User, workspace_id: UUID, target_user_id: UUID, new_role: str) -> WorkspaceMemberResponse:
+    """Only the owner makes or removes admins."""
+    viewer = permissions.require_owner(db, workspace_id, user.id)
+    target = workspace_member_repository.get(db, workspace_id, target_user_id)
+
+    if target is None:
+        raise MemberNotFoundError("That person is not a member of this workspace.")
+
+    if target.role == WorkspaceRole.OWNER:
+        raise InvalidRoleChangeError("The owner's role cannot be changed. Transfer ownership instead.")
+
+    workspace_member_repository.set_role(db, target, WorkspaceRole(new_role))
+    db.commit()
+
+    return _member_response(workspace_id, db, viewer, target_user_id)
+
+
+def remove_member(db: Session, user: User, workspace_id: UUID, target_user_id: UUID) -> None:
+    """Removing yourself is leaving. Removing someone else needs the right role (permissions.require_can_remove)."""
+    actor = permissions.require_member(db, workspace_id, user.id)
+    target = workspace_member_repository.get(db, workspace_id, target_user_id)
+
+    if target is None:
+        raise MemberNotFoundError("That person is not a member of this workspace.")
+
+    if target.user_id == user.id:
+        if target.role == WorkspaceRole.OWNER:
+            raise OwnerCannotLeaveError("You own this workspace. Transfer ownership to someone else before you leave.")
+    else:
+        permissions.require_can_remove(actor, target)
+
+    workspace_member_repository.delete(db, target)
+    db.commit()
+
+
+def transfer_ownership(db: Session, user: User, workspace_id: UUID, new_owner_user_id: UUID) -> WorkspaceResponse:
+    """The new owner becomes owner and the old owner becomes an admin, in one commit, so there is never no owner
+    and never two."""
+    current = permissions.require_owner(db, workspace_id, user.id)
+    new_owner = workspace_member_repository.get(db, workspace_id, new_owner_user_id)
+
+    if new_owner is None:
+        raise MemberNotFoundError("The new owner must already be a member of this workspace.")
+
+    if new_owner.user_id == user.id:
+        raise InvalidRoleChangeError("You already own this workspace.")
+
+    workspace = workspace_repository.get_by_id(db, workspace_id)
+    workspace_member_repository.set_role(db, new_owner, WorkspaceRole.OWNER)
+    workspace_member_repository.set_role(db, current, WorkspaceRole.ADMIN)
+    workspace_repository.set_owner(db, workspace, new_owner.user_id)
+    db.commit()
+
+    return to_response(workspace, current)

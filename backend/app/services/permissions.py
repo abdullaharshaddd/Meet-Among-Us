@@ -67,3 +67,15 @@ def require_meeting_host(db: Session, meeting_id: UUID, user_id: UUID) -> Meetin
         raise PermissionDeniedError("Only the host of this meeting can do this.")
 
     return meeting
+
+
+def require_can_remove(actor: WorkspaceMember, target: WorkspaceMember) -> None:
+    """The owner can remove anyone but themselves. An admin can remove plain members. Nobody else removes anyone.
+    Leaving is a different case, handled by the caller: a person may always remove themselves, except the owner."""
+    if actor.role == WorkspaceRole.OWNER:
+        return
+
+    if actor.role == WorkspaceRole.ADMIN and target.role == WorkspaceRole.MEMBER:
+        return
+
+    raise PermissionDeniedError("You do not have permission to remove this member.")

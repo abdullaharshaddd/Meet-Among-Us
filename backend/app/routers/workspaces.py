@@ -11,8 +11,10 @@ from app.schemas.speaker_id import ClipUploadRequest, IdentifyRequest, IdentifyR
 from app.schemas.summary import SummarizeRequest, SummarizeResponse
 from app.schemas.transcript import TranscribeRequest, TranscribeResponse
 from app.schemas.workspace import (
+    ChangeRoleRequest,
     CreateWorkspaceRequest,
     JoinByCodeRequest,
+    TransferOwnershipRequest,
     WorkspaceMemberResponse,
     WorkspaceResponse,
 )
@@ -47,6 +49,34 @@ def list_members(
     workspace_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[WorkspaceMemberResponse]:
     return workspace_service.list_members(db, user, workspace_id)
+
+
+@router.patch("/{workspace_id}/members/{user_id}/role", response_model=WorkspaceMemberResponse)
+def change_member_role(
+    workspace_id: UUID,
+    user_id: UUID,
+    payload: ChangeRoleRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> WorkspaceMemberResponse:
+    return workspace_service.change_role(db, user, workspace_id, user_id, payload.role)
+
+
+@router.delete("/{workspace_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_member(
+    workspace_id: UUID, user_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> None:
+    workspace_service.remove_member(db, user, workspace_id, user_id)
+
+
+@router.post("/{workspace_id}/transfer-ownership", response_model=WorkspaceResponse)
+def transfer_ownership(
+    workspace_id: UUID,
+    payload: TransferOwnershipRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> WorkspaceResponse:
+    return workspace_service.transfer_ownership(db, user, workspace_id, payload.user_id)
 
 
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)

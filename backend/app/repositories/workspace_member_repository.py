@@ -45,3 +45,16 @@ def list_with_users(db: Session, workspace_id: UUID) -> list[tuple[WorkspaceMemb
     ).all()
 
     return [(member, user) for member, user in rows]
+
+
+def set_role(db: Session, member: WorkspaceMember, role: WorkspaceRole) -> WorkspaceMember:
+    member.role = role
+    member.can_create_projects = role != WorkspaceRole.MEMBER
+    db.flush()
+
+    return member
+
+
+def delete(db: Session, member: WorkspaceMember) -> None:
+    db.delete(member)
+    db.flush()

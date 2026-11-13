@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -34,3 +35,12 @@ class WorkspaceMemberResponse(BaseModel):
     role: WorkspaceRole
     can_create_projects: bool
     joined_at: datetime
+
+
+class ChangeRoleRequest(BaseModel):
+    # Owner is not on the list: ownership only moves through transfer-ownership.
+    role: Literal["admin", "member"]
+
+
+class TransferOwnershipRequest(BaseModel):
+    user_id: UUID

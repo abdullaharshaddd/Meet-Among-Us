@@ -212,3 +212,30 @@ class CannotConsentForError(AppError):
     """Only you can agree for yourself. The host can only answer for a named guest."""
 
     status_code = 403
+
+
+class MemberNotFoundError(AppError):
+    status_code = 404
+
+
+class OwnerCannotLeaveError(AppError):
+    """The owner must hand the workspace to someone else first."""
+
+    status_code = 409
+
+
+class InvalidRoleChangeError(AppError):
+    status_code = 409
+
+
+class AccountOwnsSharedWorkspacesError(AppError):
+    """The account owns a workspace other people are in. The message says how to hand it over."""
+
+    status_code = 409
+
+
+class ReauthenticationFailedError(AppError):
+    """Wrong password or Google sign-in when confirming a risky action. 403, not 401, so the app does not treat
+    it as an expired session."""
+
+    status_code = 403

@@ -1,5 +1,6 @@
 import logging
 import secrets
+from urllib.parse import urlparse
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime, timedelta, timezone
@@ -8,6 +9,7 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core import join_code as join_code_format
 from app.core.config import settings
 from app.core.exceptions import (
     AlreadyWorkspaceMemberError,
@@ -151,6 +153,8 @@ def deliver_invite(session_factory: SessionFactory, sender: EmailSender, invite_
             inviter_name=inviter.display_name if inviter else "A teammate",
             token=invite.token,
             expires_at=invite.expires_at,
+            # Only worth leading with when the workspace still allows joining by code.
+            join_code=join_code_format.format_join_code(workspace.join_code) if workspace.code_joining_enabled else None,
         )
 
         try:
@@ -169,24 +173,36 @@ def deliver_invite(session_factory: SessionFactory, sender: EmailSender, invite_
             invite_repository.set_email_status(db, invite, EmailStatus.SENT)
 
 
+def _is_local_address(base_url: str) -> bool:
+    host = urlparse(base_url).hostname or ""
+
+    return host in ("localhost", "127.0.0.1", "0.0.0.0") or host.startswith(("192.168.", "10.")) or host.endswith(".local")
+
+
 def _build_message(
-    *, workspace_name: str, inviter_name: str, token: str, expires_at: datetime
+    *, workspace_name: str, inviter_name: str, token: str, expires_at: datetime, join_code: str | None = None
 ) -> tuple[str, str]:
-    # An https link (clickable in mail clients) AND the bare token, so the invitee can
-    # paste it into the app even if the link doesn't open it. Custom-scheme links are
-    # not relied on.
-    lines = [
-        f"{inviter_name} invited you to join the workspace \"{workspace_name}\" on Meet Among Us.",
-        "",
-    ]
+    """Leads with what is easiest to type: the workspace's join code, with the steps to enter it in the app. The
+    link is the second option, and the personal invite code (which also works in the same box) the third. A link
+    is not relied on, since a custom-scheme link does not open in most mail apps, and a localhost link only works
+    on the developer's own computer."""
+    how_to = 'Open the Meet Among Us app, go to Workspaces, choose "Join a workspace" and enter'
+    lines = [f'{inviter_name} invited you to join the workspace "{workspace_name}" on Meet Among Us.', ""]
+
+    if join_code:
+        lines += [f"{how_to} this join code:", "", f"    {join_code}", "", "Other ways to join:"]
+        lines += [f"- Your personal invite code, which also works in that box: {token}"]
+    else:
+        lines += [f"{how_to} this invite code:", "", f"    {token}", "", "Other ways to join:"]
+
     if settings.invite_link_base_url:
-        lines += ["Open this link to accept:", f"{settings.invite_link_base_url.rstrip('/')}/{token}", ""]
-    lines += [
-        "Or open the app and paste this invite code:",
-        token,
-        "",
-        f"This invite expires on {expires_at:%Y-%m-%d}.",
-    ]
+        base = settings.invite_link_base_url.rstrip("/")
+        lines += [f"- This link: {base}/join/{token}"]
+
+        if _is_local_address(base):
+            lines += ["  (This link only works on the computer that is running the app's server, and only while the app is in development.)"]
+
+    lines += ["", f"This invite expires on {expires_at:%Y-%m-%d}."]
 
     return f"You're invited to {workspace_name}", "\n".join(lines)
 

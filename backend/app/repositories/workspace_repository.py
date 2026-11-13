@@ -62,3 +62,10 @@ def set_code_joining_enabled(db: Session, workspace: Workspace, enabled: bool) -
     db.refresh(workspace)
 
     return workspace
+
+
+def set_owner(db: Session, workspace: Workspace, user_id: UUID) -> Workspace:
+    workspace.owner_user_id = user_id
+    db.flush()
+
+    return workspace
