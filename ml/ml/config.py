@@ -48,7 +48,45 @@ def load_config() -> TranscriptionConfig:
     )
 
 
-def warn_about_missing_keys(config: TranscriptionConfig) -> None:
+SUMMARIZERS = ("groq", "gemini")
+
+
+@dataclass(frozen=True)
+class SummaryConfig:
+    default_engine: str
+    groq_api_key: str | None
+    groq_chat_url: str
+    groq_model: str
+    gemini_api_key: str | None
+    gemini_chat_url: str
+    gemini_model: str
+
+
+def load_summary_config() -> SummaryConfig:
+    engine = os.environ.get("SUMMARIZER", "groq").strip().lower()
+
+    if engine not in SUMMARIZERS:
+        raise ValueError(f"SUMMARIZER must be one of {', '.join(SUMMARIZERS)}, got {engine!r}")
+
+    return SummaryConfig(
+        default_engine=engine,
+        groq_api_key=os.environ.get("GROQ_API_KEY") or None,
+        groq_chat_url=os.environ.get("GROQ_CHAT_URL", "https://api.groq.com/openai/v1/chat/completions"),
+        groq_model=os.environ.get("GROQ_SUMMARY_MODEL", "openai/gpt-oss-120b"),
+        gemini_api_key=os.environ.get("GEMINI_API_KEY") or None,
+        # Google's OpenAI-compatible endpoint, so one client class serves both providers.
+        gemini_chat_url=os.environ.get(
+            "GEMINI_CHAT_URL", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        ),
+        # Free-tier catalogs change often. If this id is retired, set GEMINI_SUMMARY_MODEL.
+        gemini_model=os.environ.get("GEMINI_SUMMARY_MODEL", "gemini-2.5-flash-lite"),
+    )
+
+
+def warn_about_missing_keys(config: TranscriptionConfig, summary: SummaryConfig | None = None) -> None:
     for variable, value in (("GROQ_API_KEY", config.groq_api_key), ("ELEVENLABS_API_KEY", config.elevenlabs_api_key)):
         if value is None:
             logger.warning("%s is not set. /transcribe will answer 503 for that engine until it is.", variable)
+
+    if summary is not None and summary.gemini_api_key is None:
+        logger.warning("GEMINI_API_KEY is not set. /summarize will answer 503 for the gemini engine until it is.")

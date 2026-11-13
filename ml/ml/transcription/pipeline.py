@@ -9,7 +9,7 @@ import numpy as np
 import soundfile
 
 from ml import vad
-from ml.transcription.base import Transcriber, Transcript, Word
+from ml.transcription.base import Transcriber, Transcript, Word, script_warning
 
 # Cut points are only searched for in the back half of a chunk, so no chunk comes out tiny.
 EARLIEST_CUT_FRACTION = 0.5
@@ -76,3 +76,19 @@ def transcribe_samples(
         words += [Word(word.text, word.start + start, word.end + start) for word in transcript.words]
 
     return Transcript(language=detected_language, words=words), len(boundaries) - 1
+
+
+def transcribe_auto(
+    samples: np.ndarray, sample_rate: int, transcriber: Transcriber, max_bytes: int | None
+) -> tuple[Transcript, int]:
+    """Lets the engine detect the language, then retries once as Urdu if the words came back in
+    Devanagari. Whisper often calls Urdu-English speech "Hindi" and writes Hindi script, which is
+    wrong for this product. English and plain Urdu keep their first result. See ADR-0027."""
+    transcript, requests_made = transcribe_samples(samples, sample_rate, transcriber, None, max_bytes)
+
+    if script_warning(transcript.words) is None:
+        return transcript, requests_made
+
+    retried, more_requests = transcribe_samples(samples, sample_rate, transcriber, "ur", max_bytes)
+
+    return retried, requests_made + more_requests

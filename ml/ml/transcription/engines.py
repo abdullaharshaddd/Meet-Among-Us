@@ -38,7 +38,9 @@ class GroqWhisperTranscriber:
         if language:
             form["language"] = language
 
-        if language == "ur":
+        # The prompt is mixed Urdu and English, so it is also safe when the engine picks the
+        # language itself. Only an explicit English request drops it. See ADR-0027.
+        if language in ("ur", None):
             form["prompt"] = URDU_PROMPT
 
         response = post_with_retry(

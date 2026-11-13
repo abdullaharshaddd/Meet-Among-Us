@@ -113,7 +113,7 @@ def test_groq_request_asks_for_word_timestamps_and_steers_urdu(monkeypatch: pyte
     assert urdu["model"] == "whisper-large-v3"
     assert urdu["language"] == "ur" and urdu["prompt"] == base.URDU_PROMPT
     assert "prompt" not in english
-    assert "language" not in auto
+    assert "language" not in auto and auto["prompt"] == base.URDU_PROMPT
     assert calls[0]["url"] == "https://groq.example/transcribe"
 
 
@@ -235,3 +235,35 @@ def test_small_file_is_sent_in_one_request() -> None:
     _, requests_made = pipeline.transcribe_samples(quiet, sample_rate, transcriber, "ur", 10_000_000)
 
     assert requests_made == 1 and transcriber.calls == 1
+
+
+class LanguageAwareTranscriber:
+    """Calls Urdu-English speech Hindi (Devanagari) when left to detect the language, like Whisper does."""
+
+    name = "fake"
+
+    def __init__(self, auto_words: list[str]) -> None:
+        self.auto_words = auto_words
+        self.asked: list[str | None] = []
+
+    def transcribe(self, flac_bytes: bytes, language: str | None) -> base.Transcript:
+        self.asked.append(language)
+        texts = ["ٹھیک", "ہے"] if language == "ur" else self.auto_words
+
+        return base.Transcript(language="hindi" if language is None else language, words=[base.Word(t, i, i + 0.5) for i, t in enumerate(texts)])
+
+
+def test_auto_keeps_the_first_result_when_there_is_no_devanagari() -> None:
+    transcriber = LanguageAwareTranscriber(["hello", "there"])
+    transcript, requests_made = pipeline.transcribe_auto(np.zeros(16000, dtype=np.float32), 16000, transcriber, None)
+
+    assert [word.text for word in transcript.words] == ["hello", "there"]
+    assert transcriber.asked == [None] and requests_made == 1
+
+
+def test_auto_retries_once_as_urdu_when_the_words_come_back_in_devanagari() -> None:
+    transcriber = LanguageAwareTranscriber(["ठीक", "है"])
+    transcript, requests_made = pipeline.transcribe_auto(np.zeros(16000, dtype=np.float32), 16000, transcriber, None)
+
+    assert [word.text for word in transcript.words] == ["ٹھیک", "ہے"]
+    assert transcriber.asked == [None, "ur"] and requests_made == 2
