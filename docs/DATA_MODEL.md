@@ -113,6 +113,8 @@ docs/adr/0016-two-workspace-join-mechanisms.md.
 | `created_at` | timestamptz | |
 
 ### `projects`
+*Not built. Decision of 2026-11-13: no projects this round, meetings belong to the workspace. A later migration adds `projects` and a nullable `meetings.project_id`.*
+
 A "meeting project" — a scoped container. Members only see meetings in projects they belong to.
 
 | Column | Type | Notes |
@@ -134,35 +136,9 @@ A "meeting project" — a scoped container. Members only see meetings in project
 | `role` | enum | `lead` / `member` |
 | `joined_at` | timestamptz | |
 
-### `meetings`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK |
-| `project_id` | uuid | FK |
-| `title` | text | |
-| `kind` | enum | `scheduled` / `adhoc` |
-| `scheduled_start` | timestamptz | nullable for adhoc |
-| `actual_start`, `actual_end` | timestamptz | nullable |
-| `host_user_id` | uuid | FK — the device that plays the chirp |
-| `status` | enum | `scheduled` / `armed` / `recording` / `uploading` / `ready_to_process` / `processing` / `complete` / `failed` |
-| `consent_required` | bool | default true |
-| `created_at` | timestamptz | |
-
-### `meeting_attendees`
-Covers both real members and name-only guests.
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK |
-| `meeting_id` | uuid | FK |
-| `user_id` | uuid | nullable — null means a guest |
-| `guest_name` | text | nullable — set only when `user_id` is null |
-| `consent_given_at` | timestamptz | nullable |
-| `is_recording_device` | bool | false for guests, always |
-
-Constraint: exactly one of `user_id` / `guest_name` is non-null.
-
 ### `recording_tracks`
+*Not built. Comes with the recorder (chunks, chirp, several phones). Until then `meeting_audio` holds one file per meeting.*
+
 One row per device that recorded.
 
 | Column | Type | Notes |
@@ -196,39 +172,24 @@ One row per device that recorded.
 
 Unique on `(track_id, sequence)` — makes retries idempotent.
 
-### `consent_records`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK |
-| `meeting_id` | uuid | FK |
-| `user_id` | uuid | nullable |
-| `guest_name` | text | nullable |
-| `granted` | bool | |
-| `granted_at` | timestamptz | |
-| `method` | enum | `in_app` / `verbal_attested_by_host` |
-
 ---
 
-## PROPOSED for the connected flow — awaiting approval, no migration exists
+## Meetings and their results
 
-Nothing below is built. It replaces the `meetings`, `meeting_attendees` and `consent_records`
-definitions above for this round, and designs the names that were reserved (`transcript_segments`,
-`summaries`, `decisions`, `action_items`). `recording_tracks` and `audio_chunks` stay as written and
-stay later: the simple `meeting_audio` table below holds one uploaded file per meeting until the
-recording work (chunks, chirp, several phones) needs them.
+Built by migration `5b9ad24f5c5e`. Approved 2026-11-13.
 
-### What differs from the definitions above, and why
-
-| Existing | Proposal | Why |
-|---|---|---|
-| `meetings.project_id` required | Dropped this round (see Options A) | The flow creates meetings with a title and attendees, no project |
-| `meetings.workspace_id` absent | Added | Meetings must be scoped to a workspace so other workspaces get 404 |
-| `meetings.kind`, `scheduled_start`, `actual_start/end`, `consent_required` | Dropped for now | No scheduling UI or recorder yet. Consent is always required, so the flag has no off position |
-| `meetings.status` has 8 recording-era values | 4 values: `waiting_for_audio` / `processing` / `done` / `failed` | These are the states the app shows. Recording states return with the recorder |
-| `meeting_attendees.consent_given_at` | Removed | `consent_records` is the record. Two places would drift |
-| `meeting_attendees.is_recording_device` | Removed for now | Belongs with `recording_tracks` |
-| `consent_records.user_id` + `guest_name` | `attendee_id` instead | One place to anonymise when an account is deleted |
-| Note: a renamed Unknown Speaker needs a per-segment label | A `speaker_renames` mapping table instead | An Unknown Speaker number is one voice for the whole meeting, so one rename row fixes every segment and can be undone without rewriting segments |
+Decisions behind this design:
+- **No projects this round.** Meetings belong to a workspace. `projects`, `project_members` and a nullable
+  `meetings.project_id` come later in their own migration.
+- **Who sees a meeting:** the host and the attendees only. Everyone else in the workspace, including admins and the
+  owner, gets 404. Other workspaces always get 404.
+- **A rename is a mapping row** (`speaker_renames`), not a per-segment field. An Unknown Speaker number is one voice for the
+  whole meeting, so one row fixes every segment and can be undone without rewriting segments.
+- **Consent hangs off the attendee row** (`consent_records.attendee_id`), so there is one place to anonymise when an
+  account is deleted. `consent_given_at` is therefore not on the attendee.
+- **Recording-era fields are left out until the recorder exists:** `kind`, `scheduled_start`, `actual_start/end`,
+  `consent_required` (consent is always required), `is_recording_device`.
+- `meetings.status` has four values, the states the app shows. Recording states return with the recorder.
 
 ### `meetings`
 | Column | Type | Notes |
@@ -245,7 +206,7 @@ recording work (chunks, chirp, several phones) needs them.
 | `failure_reason` | text | nullable. A readable sentence, never a stack trace or a key |
 | `created_at`, `updated_at` | timestamptz | |
 
-Index on `(workspace_id, created_at desc)`.
+Index on `(workspace_id, created_at)`.
 
 Status moves: `waiting_for_audio` → (audio confirmed and every attendee has consented) → `processing` → `done`
 or `failed`. A failed meeting can be retried: the steps already saved (`transcribed_at`, `summarized_at`)
@@ -278,8 +239,9 @@ The host is always an attendee (a service rule, not a constraint).
 | `recorded_by_user_id` | uuid | nullable, FK → users, on delete set null. The host who attested, for `verbal_attested_by_host` |
 | `notice_version` | text | which wording the person agreed to, for example `2026-11-v1`. It names the outside services audio is sent to |
 
-Rule: processing starts only when every attendee has a row with `granted = true`. An attendee who declines
-must be removed from the meeting (or the meeting not recorded).
+Rule: processing starts only when every attendee has a row with `granted = true`. The host can remove any attendee
+who declines or does not show up (never the host themselves), so one missing person cannot block processing forever.
+Attendees can only be changed while the meeting is `waiting_for_audio` or `failed`.
 
 ### `meeting_audio`
 One uploaded file per meeting for now.
@@ -383,41 +345,16 @@ Otherwise "owner not identified" or "speaker not identified". Any attendee may m
 | `meeting_attendees` | `user_id` set to null and `former_member` set to true, so transcripts, attendee lists and task owners read "Former member" |
 | `consent_records` | Kept, because they belong to the attendee row. The record that the person agreed stays with the meeting |
 
-### Options A: do meetings belong to a project?
-- **A1 (recommended).** No projects this round. Meetings belong to the workspace. `project_id` is added later by a
-  migration when projects are built. The mobile start-meeting sheet already says "saved without one".
-- **A2.** Minimum projects now: `projects` (`id`, `workspace_id`, `name`, `created_by_user_id`, `created_at`) and
-  `meetings.project_id` nullable. No project members, no project join code, no project screens beyond a name picker.
-  Adds a table and a screen for something the flow does not need.
-- **A3.** Projects as the existing model describes (required, with members and join codes). The largest option,
-  and it changes who can see a meeting.
-
-### Options B: who can see a meeting inside a workspace?
-- **B1 (recommended).** The host and the attendees only. Everyone else in the workspace, including admins,
-  gets 404. Transcripts are private by default.
-- **B2.** Every member of the workspace sees every meeting. Simplest, and easiest for the owner to demo.
-- Other workspaces always get 404, in both options.
-
-### Proposed invariants (would join the list at the end)
-8. Every meeting belongs to one workspace. Someone who may not see it gets 404, never 403.
-9. A meeting cannot enter `processing` unless every attendee has a granted consent record.
-10. Segments are never edited. A rename is a `speaker_renames` row, and citations are turn numbers.
-11. A guest has no account and no voiceprint. "Unknown Speaker N" and "Unclear" are labels, never attendees. A
-    `former_member` attendee is neither a guest nor an account.
-12. Only members who are attendees are passed to speaker matching as `participant_user_ids`.
-
-### Indexes, and a drift fix
-- `meetings (workspace_id, created_at desc)`, `meeting_attendees (user_id)`, `action_items (meeting_id)`,
-  `transcript_segments (meeting_id, position)` unique.
-- `alembic check` reports two indexes that exist in the migrations but not in the models:
-  `ix_workspace_members_user_id` and `ix_invites_workspace_id_email`. The new migration declares them in the models
-  so `alembic check` is clean.
+### Indexes
+`meetings (workspace_id, created_at)`, `meeting_attendees (user_id)`, `transcript_segments (meeting_id, position)` unique.
+The migration also declares `ix_workspace_members_user_id` and `ix_invites_workspace_id_email` in the models, which already
+existed in the database, so `alembic check` is clean.
 
 ---
 
 ## Reserved for later milestones — do not build yet
 
-`decision_status_history`, `embeddings_index`, `agent_tool_calls`, and `recording_tracks` / `audio_chunks` above.
+`decision_status_history`, `embeddings_index`, `agent_tool_calls`, and the projects and recording tables marked above.
 
 Listed here only so nobody accidentally reuses these names for something else.
 
@@ -432,3 +369,9 @@ Listed here only so nobody accidentally reuses these names for something else.
 5. A user can be in many workspaces; a voiceprint is shared across all of them.
 6. Exactly one `workspace_members` row per workspace has `role='owner'`, matching `workspaces.owner_user_id`. Transfer, never delete-and-recreate.
 7. An `invites` row's `accepted_by_user_id` need not match its `email` — whoever holds the token and is signed in can accept it.
+8. Every meeting belongs to one workspace. Someone who may not see it gets 404, never 403.
+9. A meeting cannot enter `processing` unless every attendee has a granted consent record.
+10. Segments are never edited. A rename is a `speaker_renames` row, and citations are turn numbers.
+11. A guest has no account and no voiceprint. "Unknown Speaker N" and "Unclear" are labels, never attendees. A
+    `former_member` attendee is neither a guest nor an account.
+12. Only members who are attendees are passed to speaker matching as `participant_user_ids`.

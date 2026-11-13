@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
@@ -32,7 +32,8 @@ class Workspace(Base):
 
 class WorkspaceMember(Base):
     __tablename__ = "workspace_members"
-    __table_args__ = (UniqueConstraint("workspace_id", "user_id"),)
+    # The index on user_id is for "which workspaces am I in", asked on every login.
+    __table_args__ = (UniqueConstraint("workspace_id", "user_id"), Index("ix_workspace_members_user_id", "user_id"))
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid7)
     workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), nullable=False)
