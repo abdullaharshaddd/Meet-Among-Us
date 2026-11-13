@@ -1,6 +1,6 @@
-# HANDOFF — state of MeetAmongUs (updated 2026-11-11)
+# HANDOFF — state of MeetAmongUs (updated 2026-11-13)
 
-Work is split across two branches off `origin/main`: `feat/backend-speaker-id-transcription` (backend, ml, scripts, docs) and `feat/mobile-field-recorder-redesign` (mobile redesign and its design ADRs). Merge both; they do not overlap in files except `docs/`.
+The current work is on `feature/connected-flow` (nothing pushed). It contains `feat/mobile-field-recorder-redesign`. The backend branch named in older versions of this file (`feat/backend-speaker-id-transcription`) no longer exists locally, so check `origin` before assuming anything is missing.
 
 Read `CLAUDE.md` first for the working rules and locked decisions. This file records what exists, what doesn't, and what to watch for.
 
@@ -8,7 +8,7 @@ Read `CLAUDE.md` first for the working rules and locked decisions. This file rec
 Bilingual (English–Urdu) meeting intelligence for in-person, multi-speaker meetings. Final-year project, three developers.
 FYP-1 scope: signup → workspace → voice enrollment → project → meeting → recorded and uploaded audio → speaker identification → transcription → summarization.
 RAG, the agent layer and fine-tuning come later. Do not build or stub them.
-Decided 2026-11-11: Phase 5 (projects, meetings) and the Android build are postponed until after transcription and summarization.
+Decided 2026-11-11: Phase 5 (projects, meetings) and the Android build were postponed until after transcription and summarization. The meeting flow is now built (below); projects and the Android build are not.
 
 ## Done
 
@@ -77,41 +77,51 @@ In scope for FYP-1 (decided 2026-11-11).
 - Design system (ADR-0024; light/dark ADR-0022): Paper and Studio themes, Instrument Serif / Instrument Sans / Geist Mono, one orange `signal` colour for recording only. Tokens in `mobile/src/theme/tokens.ts`. The legacy theme shim, old components and IBM Plex are removed.
 - Screens: Meetings home, Live recording, Meeting detail (transcript, rename sheet, citation jumps), Assistant, Tasks, Voice enrollment, Workspaces (create, join by code, members, invite), Auth, Settings (appearance System/Paper/Studio, sign-out sheet), plus `design-system` preview.
 - Verified on Expo web in both themes at phone width; `tsc` clean. **Not yet tested on an Android device.**
-- Meetings, tasks, assistant and workspace members still render **mock data** (`mobile/src/mocks/`); only auth, enrollment and the workspace list/create/join hit the real API.
+- Meetings, tasks, members and invites now use the real API (see "Connected flow" below). The assistant tab says "Coming soon".
 - Logo proposals (three marks, three wordmarks) are in `mobile/assets/brand-proposals/`, undecided.
 
-### Migrations (5)
-baseline, users, refresh_tokens, voiceprints and enrollment_samples, workspaces and invites. Phase 4c added none.
+### Connected flow: meetings end to end (backend + mobile, branch `feature/connected-flow`)
+- **Schema:** migration `5b9ad24f5c5e` adds meetings, meeting_attendees, consent_records, meeting_audio, transcript_segments, speaker_renames, summaries, decisions, action_items. `DATA_MODEL.md` has the real schema. `project_id` on meetings comes with projects.
+- **Meetings API** (`routers/meetings.py`): create (members plus named guests), list, detail, status, attendees add/remove (host, while waiting or failed), consent, audio `upload-url` / `complete` / retry, speaker renames, `/me/action-items` with done/undone, consent notice. Others get 404, never 403.
+- **Consent comes first:** everyone in the meeting agrees (members for themselves, the host for guests). `upload-url` and `complete` both answer `409` naming who has not agreed, before any audio is requested, stored or checked.
+- **Processing** runs in the background in two saved steps (transcript among attendees only, then summary), with readable failure reasons, retry of only the missing step, recovery after a restart, 30-minute and 150 MB limits, and split-then-merge summaries (ADR-0029, ADR-0030).
+- **Members and invites:** roles, remove, leave, transfer ownership; the invite email leads with the join code; `/join/{token}` is a plain landing page (ADR-0028, ported from `feature/workspace-invites`).
+- **Account deletion** (`/account/delete`, ADR-0031): re-authentication, anonymised to "Former member", blocked while you own a shared workspace.
+- **Housekeeping:** expired refresh tokens are purged at startup and hourly; the backend warns at startup if the ML service version is old (`API_VERSION` 2).
+- **Recording hand-off for Vaniya:** `docs/handoff/recording-upload.md`. Until the recorder exists, `scripts/attach_audio_to_meeting.py <meeting id> <audio file>` uploads a file through the same endpoints.
+- **Mobile:** meetings list, new meeting, meeting detail (transcript, summary, decisions, action items, rename sheet), consent, tasks, members, invite, join (join code or personal invite code), delete account. `src/mocks` is deleted. The live-recording screen is an honest placeholder ("Recording is being built").
+- **Product-rule change:** a user who has not enrolled their voice can now create meetings. They get a warning that their speech cannot be named automatically.
+- **Verified by tests only, never clicked through in a browser or on a device:** see `docs/TEST_CHECKLIST.md`, which marks each step.
+
+### Migrations (6)
+baseline, users, refresh_tokens, voiceprints and enrollment_samples, workspaces and invites, meetings. Phase 4c added none.
 
 ### Design decisions recorded
-ADRs 0001–0024 in `docs/adr/`. IBM Plex (0005) is superseded by the Field Recorder identity (0024). RTL handled per string (0007), hand-rolled form validation (0008).
+ADRs 0001–0031 in `docs/adr/`. IBM Plex (0005) is superseded by the Field Recorder identity (0024). RTL handled per string (0007), hand-rolled form validation (0008).
 
 ## Not done
-- **Projects, project_members, meetings, meeting_attendees, recording_tracks, audio_chunks, consent_records:** defined in `DATA_MODEL.md` but have **no migrations, models or endpoints**.
-- **Real data behind the redesigned mobile screens:** meetings, tasks, assistant and workspace members are mocks until Phase 5 and the member/invite endpoints exist. There is no `projects` route and no meeting lobby screen.
-- **Workspace member and invite endpoints:** the `invites` table exists but the router has none; the mobile members/invite screens run on mock members.
-- **Recording pipeline:** WAV capture, FLAC transcode, 30 s chunked upload, sync chirp (1–8 kHz, 3 s) at start and end, 2 h cap.
-- **Consent screen and meeting lobby.**
-- **EAS development build and Expo Go avoidance:** check that `eas.json` produces a working APK on a real device.
+- **Recording in the app (Vaniya's part):** mic capture, timer, level meter, stop, WAV to FLAC, and upload with retry. The sync chirp and 30 s chunked upload in CLAUDE.md are not built either; the current contract is one file per meeting.
+- **Projects and project_members.**
+- **Assistant tab** (RAG and the agent layer are later).
+- **EAS development build:** check that `eas.json` produces a working APK on a real device.
 - **Seed script:** `scripts/seed_demo.py` is referenced in CLAUDE.md but does not exist.
-- **Tests:** only `ml/tests` and backend tests were seen in earlier sessions. The state of the full suite was not rechecked here.
+- **Never run:** Gemini (no key set), the 20-minute Meet `.mp4`, the invite landing page and Google re-authentication in a browser or on a device.
 
 ## Needs attention
-1. Database is Supabase Postgres (ADR-0001); `CLAUDE.md` now says so.
-2. Backend runs on port 8003 (`--port 8003`); `mobile/.env` points `EXPO_PUBLIC_API_URL` at it. Earlier ports 8001/8002 are retired.
-3. **EAS rebuild needed:** the redesign adds `expo-haptics`, `expo-clipboard` and `expo-linear-gradient`. Then test on an Android device: bidi/RTL isolates, Nastaliq clipping, haptics, keyboard behaviour, tab-bar hiding, swipe directions, Stop ring animation, Material icons.
-4. `mobile/src/api/types.gen.ts` was regenerated from the backend branch, so it lists `/enrollment/passages`, `/identify`, `/transcribe` and clip uploads. Merge the backend branch first, or regenerate (`npm run generate:types`) after merging.
-5. Match threshold (0.75) and the 15 s speech minimum are still placeholders; `docs/evaluation/` has the first data, but no cross-language speaker-separation result is recorded.
-6. `GLOSSARY.md` is required for each new term. New terms from 4c were added; recheck after Phase 5.
+1. Database is Supabase Postgres (ADR-0001). Dev and test are separate projects; backend tests need `TEST_DATABASE_URL` pointing at the test project (the guard refuses otherwise).
+2. Backend runs on port 8003; `mobile/.env` points `EXPO_PUBLIC_API_URL` at it. `DEV_TOOLS_ENABLED=true` in `backend/.env` is only for the dev reset script and the `/dev` pages. Never set it anywhere shared.
+3. **EAS rebuild needed:** the redesign adds `expo-haptics`, `expo-clipboard` and `expo-linear-gradient`. Then test on an Android device: bidi/RTL isolates, Nastaliq rendering, haptics, and Google sign-in.
+4. Speaker identification names nobody on the `Recordings/` clips (floor 0.72 not reached). Re-enroll on the same kind of channel as the meetings and retest before changing the floor.
+5. Match threshold (0.75) and the 15 s speech minimum are still placeholders.
+6. `GLOSSARY.md` is required for each new term.
+7. `scripts/reset_dev_data.py --confirm` wipes the dev database and its R2 bucket. It refuses without `DEV_TOOLS_ENABLED=true` and against the test project.
 
 ## Suggested next step
-Decide what to do about speaker identification on these clips (record enrollments and clips on the same channel, or revisit the floor with data, see `docs/evaluation/recordings_run/`). Then run Gemini once a `GEMINI_API_KEY` is set, and start the evaluation in `docs/evaluation/summarization.md`. Phase 5 (projects and meetings) and the Android build are postponed until after FYP-1's transcription and summarization work. Per CLAUDE.md, write a plan and wait for approval before each new phase.
+Test the connected flow by hand with `docs/TEST_CHECKLIST.md`, then decide about speaker identification, then build recording (Vaniya).
 
 ## Run it
+See `docs/TEST_CHECKLIST.md` for the exact start commands for all three services.
 ```bash
-cd backend && uv run uvicorn app.main:app --reload --port 8003  # API
 cd backend && uv run alembic upgrade head
-cd backend && uv run pytest
-cd ml && uv run uvicorn ...                            # ML service on :8500; check ml/ for the exact entrypoint
-cd mobile && npx expo start --dev-client
+cd backend && uv run pytest        # needs TEST_DATABASE_URL (test project)
 ```

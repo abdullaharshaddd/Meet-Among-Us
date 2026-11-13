@@ -1,5 +1,7 @@
 # Integration audit: does MeetAmongUs work as one flow?
 
+> **Historical (2026-11-11). Superseded 2026-11-13.** This audit describes `main` before the connected flow. Since then meetings, consent, the audio hand-off, background processing (transcript, then summary), speaker renames, tasks, members, invites and account deletion are built on `feature/connected-flow`, and the mobile mocks are gone. The current state is in `docs/HANDOFF.md`, and the manual walkthrough is `docs/TEST_CHECKLIST.md`. What is still missing: recording in the app (Vaniya), projects, the assistant, and an Android build. Read the sections below as the record of what was found, not as today's status.
+
 Audited 2026-11-11 on `main` at `12e2746` (working tree had uncommitted edits to `CLAUDE.md` and `docs/HANDOFF.md` that predate this audit; neither was touched). Scope is the FYP-1 scope in the current `CLAUDE.md`: signup → workspace → enrollment → project → meeting → recorded audio → speaker ID → transcription → summarization.
 
 ## Verdict

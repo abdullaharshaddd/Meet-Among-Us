@@ -42,6 +42,9 @@ Response `200`:
 
 Asking again replaces the previous attempt (one file per meeting), so it is safe to call again after a failure.
 
+This fails with `409` and "Waiting for consent from: Sara." until everyone in the meeting has agreed. The server checks
+consent before anything else, so nothing is stored for a meeting whose people have not all agreed.
+
 ### 2. Send the file
 
 `PUT <upload_url>` with the **raw file bytes as the body** and a `Content-Type` that matches the format. Do not send
@@ -113,7 +116,7 @@ only need it if you want to show progress yourself.
 | `404` | Not your meeting, or it does not exist | Go back to the meetings list. |
 | `409` | The meeting is already `processing` or `done` and cannot take new audio | Show the status instead. |
 | `409` | Step 3 before the file arrived: "No audio has arrived yet" | Finish the upload, then repeat step 3. |
-| `409` | Step 3 with consent missing: "Waiting for consent from: Sara." | Send the host back to the consent screen. |
+| `409` | Step 1 or step 3 with consent missing: "Waiting for consent from: Sara." | Send the host back to the consent screen. |
 | `413` | File over `max_bytes` | Tell the user the recording is too large. |
 | `422` | `audio_format` is not one of the five | A bug in the app. |
 
