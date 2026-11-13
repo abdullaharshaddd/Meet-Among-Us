@@ -63,3 +63,33 @@ def delete_objects(keys: list[str]) -> None:
         )
     except ClientError:
         pass
+
+
+def list_keys(prefix: str = "") -> list[str]:
+    """Every object key under a prefix. Pages through the listing, since R2 returns at most 1000 at a time."""
+    keys: list[str] = []
+    token = None
+
+    while True:
+        options = {"Bucket": settings.r2_bucket_name, "Prefix": prefix}
+
+        if token:
+            options["ContinuationToken"] = token
+
+        page = _get_client().list_objects_v2(**options)
+        keys += [item["Key"] for item in page.get("Contents", [])]
+
+        if not page.get("IsTruncated"):
+            return keys
+
+        token = page["NextContinuationToken"]
+
+
+def delete_prefix(prefix: str) -> int:
+    """Deletes everything under a prefix, 1000 keys per request. Returns how many keys it tried to delete."""
+    keys = list_keys(prefix)
+
+    for start in range(0, len(keys), 1000):
+        delete_objects(keys[start : start + 1000])
+
+    return len(keys)

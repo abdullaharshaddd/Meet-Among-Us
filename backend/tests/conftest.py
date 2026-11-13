@@ -1,9 +1,33 @@
 import os
+from pathlib import Path
 
 import pytest
+from dotenv import dotenv_values
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
+
+# pydantic-settings reads backend/.env without putting it in os.environ, so the test URL has to be
+# read from the file here. This must run before the app is imported, because the app reads
+# DATABASE_URL at import time.
+_env_file = dotenv_values(Path(__file__).resolve().parents[1] / ".env")
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or _env_file.get("TEST_DATABASE_URL")
+
+if TEST_DATABASE_URL:
+    from app.core.db_projects import describe, same_project
+
+    dev_url = os.environ.get("DATABASE_URL") or _env_file.get("DATABASE_URL") or ""
+
+    if same_project(TEST_DATABASE_URL, dev_url):
+        raise pytest.UsageError(
+            "TEST_DATABASE_URL points at the same Supabase project as DATABASE_URL "
+            f"({describe(TEST_DATABASE_URL)}). Use a separate project for tests."
+        )
+
+    # Point the app itself at the test database too, so no code path can reach the dev database
+    # while tests run. Environment variables win over .env in pydantic-settings.
+    os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+    os.environ["DIRECT_URL"] = TEST_DATABASE_URL
 
 from app.core import rate_limit
 from app.core.db import get_db
@@ -18,7 +42,6 @@ def _reset_rate_limits() -> None:
     # against a later test's rate-limit budget.
     rate_limit.reset()
 
-TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 # No Docker/testcontainers this phase — engine is created lazily so importing this
 # conftest never fails; only tests that actually request `db` skip if it's unset.
 _engine = create_engine(TEST_DATABASE_URL) if TEST_DATABASE_URL else None
