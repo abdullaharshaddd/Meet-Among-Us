@@ -33,7 +33,7 @@ UPLOAD_URL_EXPIRES_IN_SECONDS = 900
 # audio_format -> R2 Content-Type. A presigned PUT that specifies ContentType binds
 # it into the signature (a well-known S3/R2 gotcha), so the caller's declared format
 # must match the bytes it actually uploads or R2 rejects the PUT outright.
-CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav", "m4a": "audio/mp4", "webm": "audio/webm"}
+CONTENT_TYPES: dict[str, str] = {"flac": "audio/flac", "wav": "audio/wav", "m4a": "audio/mp4", "webm": "audio/webm", "ogg": "audio/ogg"}
 
 # A passage rejected this many times in a row, with no acceptance since, flips
 # enrollment_status to 'failed' — a UX signal to stop retrying blindly and show

@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -7,12 +10,28 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import AppError
+from app.routers.account import router as account_router
 from app.routers.auth import router as auth_router
 from app.routers.enrollment import router as enrollment_router
+from app.routers.invites import invites_router, workspace_invites_router
+from app.routers.join_page import router as join_page_router
+from app.routers.meetings import router as meetings_router
 from app.routers.workspaces import router as workspaces_router
 from app.schemas.health import HealthResponse
+from app.startup import keep_purging_expired_tokens, run_startup_checks
 
-app = FastAPI(title="AI Meeting Intelligence Agent")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    run_startup_checks()
+    purge_task = asyncio.create_task(keep_purging_expired_tokens())
+
+    yield
+
+    purge_task.cancel()
+
+
+app = FastAPI(title="AI Meeting Intelligence Agent", lifespan=lifespan)
 
 # Expo web runs on a different origin (localhost:8081) than the API
 # (localhost:8001), so the browser blocks the request without this.
@@ -27,8 +46,13 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(account_router)
 app.include_router(enrollment_router)
 app.include_router(workspaces_router)
+app.include_router(workspace_invites_router)
+app.include_router(invites_router)
+app.include_router(join_page_router)
+app.include_router(meetings_router)
 
 if settings.dev_tools_enabled:
     # /dev/enroll only exists on a developer's own machine — see

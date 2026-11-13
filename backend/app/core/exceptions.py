@@ -73,6 +73,12 @@ class CodeJoiningDisabledError(AppError):
     status_code = 403
 
 
+class ParticipantNotInWorkspaceError(AppError):
+    """participant_user_ids named someone who is not a member of the workspace."""
+
+    status_code = 422
+
+
 class ClipNotInWorkspaceError(AppError):
     """audio_key wasn't uploaded through this workspace's clip upload endpoint."""
 
@@ -92,3 +98,144 @@ class TranscriptionRateLimitedError(AppError):
 
 class TranscriptionFailedError(AppError):
     status_code = 502
+
+
+class SummaryUnavailableError(AppError):
+    """The summarizer can't be used right now, for example its API key isn't set.
+    The message names what to fix."""
+
+    status_code = 503
+
+
+class SummaryRateLimitedError(AppError):
+    status_code = 429
+
+
+class SummaryTooLongError(AppError):
+    """The transcript doesn't fit in one request to the chosen model."""
+
+    status_code = 413
+
+
+class SummaryFailedError(AppError):
+    status_code = 502
+
+
+class NothingToSummarizeError(AppError):
+    status_code = 422
+
+
+class InviteNotFoundError(AppError):
+    """Unknown token or id. Same 404 for both, so a response never confirms whether a
+    guessed token was ever real."""
+
+    status_code = 404
+
+
+class InviteExpiredError(AppError):
+    status_code = 410
+
+
+class InviteRevokedError(AppError):
+    status_code = 410
+
+
+class InviteAlreadyUsedError(AppError):
+    """A different user already accepted this token  - see
+    docs/adr/0018-invite-acceptance-not-email-bound.md. The same user re-accepting is
+    success, not this error."""
+
+    status_code = 409
+
+
+class InviteAlreadyPendingError(AppError):
+    """An unexpired, unrevoked invite for this email already exists in the workspace."""
+
+    status_code = 409
+
+
+class AlreadyWorkspaceMemberError(AppError):
+    """The invited email already belongs to a member of this workspace."""
+
+    status_code = 409
+
+
+class MeetingNotFoundError(AppError):
+    """Also used when the caller may not see the meeting, so a response never confirms it exists."""
+
+    status_code = 404
+
+
+class AttendeeNotFoundError(AppError):
+    status_code = 404
+
+
+class InvalidAttendeeError(AppError):
+    """An attendee that cannot be added: not a member of the workspace, or a bad guest name."""
+
+    status_code = 422
+
+
+class DuplicateAttendeeError(AppError):
+    status_code = 409
+
+
+class CannotRemoveHostError(AppError):
+    status_code = 409
+
+
+class MeetingLockedError(AppError):
+    """The meeting is processing or done, so attendees, consent and audio can no longer change."""
+
+    status_code = 409
+
+
+class ConsentMissingError(AppError):
+    """Processing needs every attendee's consent. The message names who is missing."""
+
+    status_code = 409
+
+
+class AudioNotUploadedError(AppError):
+    status_code = 409
+
+
+class AudioTooLargeError(AppError):
+    status_code = 413
+
+
+class NothingToRetryError(AppError):
+    status_code = 409
+
+
+class CannotConsentForError(AppError):
+    """Only you can agree for yourself. The host can only answer for a named guest."""
+
+    status_code = 403
+
+
+class MemberNotFoundError(AppError):
+    status_code = 404
+
+
+class OwnerCannotLeaveError(AppError):
+    """The owner must hand the workspace to someone else first."""
+
+    status_code = 409
+
+
+class InvalidRoleChangeError(AppError):
+    status_code = 409
+
+
+class AccountOwnsSharedWorkspacesError(AppError):
+    """The account owns a workspace other people are in. The message says how to hand it over."""
+
+    status_code = 409
+
+
+class ReauthenticationFailedError(AppError):
+    """Wrong password or Google sign-in when confirming a risky action. 403, not 401, so the app does not treat
+    it as an expired session."""
+
+    status_code = 403

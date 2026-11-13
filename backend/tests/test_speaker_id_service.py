@@ -259,3 +259,51 @@ def test_voiceprint_with_a_different_model_version_is_skipped_and_reported(db: S
     assert [c.name for c in candidates] == ["Alice"]
     assert [item.name for item in skipped] == ["Bob"]
     assert skipped[0].model_version == "old-model-v0"
+
+
+# --- participant_user_ids: the attendee list decides who can be matched -------------------
+
+
+def _row(name: str):
+    from types import SimpleNamespace
+
+    user = SimpleNamespace(id=uuid.uuid4(), display_name=name)
+
+    return (SimpleNamespace(user_id=user.id), user)
+
+
+def test_participants_narrow_the_candidates_and_none_leaves_everyone() -> None:
+    rows = [(f"vp-{name}", _row(name)[1]) for name in ("abdullah", "Vaniya", "mubashra")]
+    wanted = {rows[0][1].id, rows[1][1].id}
+
+    assert [user.display_name for _, user in speaker_id_service.restrict_to_participants(rows, wanted)] == ["abdullah", "Vaniya"]
+    assert speaker_id_service.restrict_to_participants(rows, None) == rows
+
+
+def test_a_participant_outside_the_workspace_is_refused_naming_the_id(monkeypatch) -> None:
+    import pytest
+
+    from app.core.exceptions import ParticipantNotInWorkspaceError
+
+    members = [_row("abdullah"), _row("Vaniya")]
+    monkeypatch.setattr(workspace_member_repository, "list_with_users", lambda db, workspace_id: members)
+    stranger = uuid.uuid4()
+
+    with pytest.raises(ParticipantNotInWorkspaceError) as caught:
+        speaker_id_service.require_participants(None, uuid.uuid4(), [members[0][0].user_id, stranger])
+
+    assert str(stranger) in str(caught.value)
+    assert speaker_id_service.require_participants(None, uuid.uuid4(), None) is None
+    assert speaker_id_service.require_participants(None, uuid.uuid4(), [members[1][0].user_id]) == {members[1][0].user_id}
+
+
+def test_an_empty_participant_list_is_rejected_by_the_request_schema() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from app.schemas.speaker_id import IdentifyRequest
+
+    with pytest.raises(ValidationError):
+        IdentifyRequest(audio_key="workspace-clips/x/a.flac", participant_user_ids=[])
+
+    assert IdentifyRequest(audio_key="workspace-clips/x/a.flac").participant_user_ids is None

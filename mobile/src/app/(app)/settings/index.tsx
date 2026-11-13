@@ -139,6 +139,10 @@ export default function SettingsScreen() {
           </SettingsGroup>
         )}
 
+        <SettingsGroup title="Account">
+          <SettingsRow label="Delete account" tone="danger" onPress={() => router.push("/(app)/settings/delete-account")} isLast />
+        </SettingsGroup>
+
         <Button label="Sign out" variant="dangerText" onPress={() => setSheet("signout")} />
       </Animated.ScrollView>
 

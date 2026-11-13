@@ -54,12 +54,24 @@
   .unclear .who { color: var(--muted); }
   .failure { color: var(--bad); font-size: 0.9rem; }
   small.hint { color: var(--muted); }
+
+  .entry .num { color: var(--muted); font-weight: normal; margin-right: 6px; }
+  .entry.flash { background: #fff3cd; transition: background 0.3s; }
+  .summary-panel { border-top: 2px solid var(--border); margin-top: 12px; padding-top: 8px; }
+  .summary-panel h3 { font-size: 0.8rem; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .summary-panel ul { margin: 0; padding-left: 18px; }
+  .summary-panel li { margin: 6px 0; line-height: 1.5; }
+  .summary-panel .who-line { font-size: 0.8rem; color: var(--muted); }
+  .quote { background: var(--bg-alt); padding: 4px 8px; margin: 4px 0; font-size: 0.9rem; }
+  .quote.urdu { font-family: "Noto Nastaliq Urdu", "Noto Nastaliq", serif; direction: rtl; text-align: right; line-height: 2.2; font-size: 1.1rem; }
+  .chip { margin: 2px 4px 0 0; padding: 1px 8px; font-size: 0.75rem; border-radius: 10px; font-variant-numeric: tabular-nums; background: #e8efff; border-color: #b6c8f5; color: var(--accent); }
+  .warning { color: var(--warn); font-size: 0.78rem; margin-top: 2px; }
 </style>
 </head>
 <body>
 
 <h1>Transcription Dev Harness</h1>
-<div class="banner">Dev tool only. It exists only when <code>DEV_TOOLS_ENABLED=true</code>. Audio you submit here is sent to the transcription engines (Groq, ElevenLabs), which are third-party services. See <code>docs/adr/0023-transcriber-interface.md</code>.</div>
+<div class="banner">Dev tool only. It exists only when <code>DEV_TOOLS_ENABLED=true</code>. Audio you submit here is sent to the transcription engines (Groq, ElevenLabs), and transcripts you summarize are sent to Groq or Gemini, which are third-party services. See <code>docs/adr/0023-transcriber-interface.md</code> and <code>docs/adr/0025-summarization-model-choice.md</code>.</div>
 <div id="insecure-context-banner" class="banner error" hidden>
   Microphone access needs a secure context (HTTPS or localhost). Recording will fail on this address; uploading a file still works.
 </div>
@@ -88,6 +100,18 @@
           <option value="elevenlabs">ElevenLabs Scribe</option>
         </select>
       </label>
+      <fieldset id="participants-box" style="border:0;padding:0;margin:0">
+        <legend style="font-size:inherit;padding:0">Participants (only these can be matched; none ticked means everyone enrolled)</legend>
+        <span id="participants"></span>
+      </fieldset>
+      <label>Summarizer
+        <select id="summary-engine">
+          <option value="">Default (set by SUMMARIZER)</option>
+          <option value="groq">Groq (gpt-oss)</option>
+          <option value="gemini">Gemini Flash-Lite</option>
+          <option value="both">Both side by side</option>
+        </select>
+      </label>
     </div>
   </fieldset>
 
@@ -96,7 +120,7 @@
     <button id="record-btn" class="primary">● Record</button>
     <button id="stop-btn" disabled>■ Stop</button>
     <span id="timer" class="timer">0.0s</span>
-    <div><label>Or upload a file (wav, flac, m4a, webm) <input type="file" id="file-input" accept=".wav,.flac,.m4a,.webm,audio/*"></label></div>
+    <div><label>Or upload a file (wav, flac, m4a, webm, ogg) <input type="file" id="file-input" accept=".wav,.flac,.m4a,.webm,.ogg,audio/*"></label></div>
     <audio id="preview" controls hidden></audio>
   </fieldset>
 
@@ -119,7 +143,7 @@
 // (same technique as the enrollment harness and docs/adr/0007-rtl-per-string-not-forced.md).
 const FSI = "⁨", PDI = "⁩";
 
-const CONTENT_TYPES = { webm: "audio/webm", m4a: "audio/mp4", wav: "audio/wav", flac: "audio/flac" };
+const CONTENT_TYPES = { webm: "audio/webm", m4a: "audio/mp4", wav: "audio/wav", flac: "audio/flac", ogg: "audio/ogg" };
 
 // Tokens live only in this object, never in localStorage or a URL.
 const state = { accessToken: null, clip: null, uploaded: null, recorder: null, stream: null, chunks: [], timerId: null };
@@ -189,10 +213,35 @@ async function loadWorkspaces() {
     select.appendChild(option);
   }
   if (workspaces.length === 0) showStatus("You are not a member of any workspace yet.", true);
+  await loadParticipants();
+}
+
+// Ticked members become participant_user_ids. Nothing ticked sends no list at all.
+async function loadParticipants() {
+  const box = document.getElementById("participants");
+  box.innerHTML = "";
+  const workspaceId = document.getElementById("workspace").value;
+  if (!workspaceId) return;
+  const members = await api("/dev/transcribe/members?workspace_id=" + encodeURIComponent(workspaceId));
+  for (const member of members) {
+    const label = document.createElement("label");
+    label.style.marginRight = "12px";
+    const box_ = document.createElement("input");
+    box_.type = "checkbox";
+    box_.value = member.user_id;
+    label.appendChild(box_);
+    label.appendChild(document.createTextNode(" " + member.display_name + (member.enrollment_status === "complete" ? "" : " (not enrolled)")));
+    box.appendChild(label);
+  }
+}
+
+function participantIds() {
+  const ids = [...document.querySelectorAll("#participants input:checked")].map((input) => input.value);
+  return ids.length > 0 ? ids : null;
 }
 
 // A new workspace means the clip must be uploaded again, since its key is scoped to one workspace.
-document.getElementById("workspace").addEventListener("change", () => { state.uploaded = null; });
+document.getElementById("workspace").addEventListener("change", () => { state.uploaded = null; loadParticipants().catch((err) => showStatus(err.message, true)); });
 
 // --- the clip: record or upload ----------------------------------------------
 
@@ -248,7 +297,7 @@ document.getElementById("file-input").addEventListener("change", (e) => {
   if (!file) return;
   const format = file.name.split(".").pop().toLowerCase();
   if (!CONTENT_TYPES[format]) {
-    showStatus("Unsupported file type ." + format + ". Use wav, flac, m4a or webm.", true);
+    showStatus("Unsupported file type ." + format + ". Use wav, flac, m4a, webm or ogg.", true);
     return;
   }
   showStatus("", false);
@@ -271,7 +320,7 @@ async function transcribeWith(engine) {
   const { workspaceId, audioKey } = await ensureUploaded();
   const startedAt = performance.now();
   try {
-    const body = await api("/workspaces/" + workspaceId + "/transcribe", { method: "POST", body: { audio_key: audioKey, engine: engine || null } });
+    const body = await api("/workspaces/" + workspaceId + "/transcribe", { method: "POST", body: { audio_key: audioKey, engine: engine || null, participant_user_ids: participantIds() } });
     return { ok: true, seconds: (performance.now() - startedAt) / 1000, body };
   } catch (err) {
     return { ok: false, seconds: (performance.now() - startedAt) / 1000, message: err.message };
@@ -310,8 +359,12 @@ function element(tag, className, text) {
   return el;
 }
 
+let cardCount = 0;
+
 function renderResult(requestedEngine, outcome) {
   const card = element("div", "card");
+  card.id = "card" + (++cardCount);
+  const workspaceId = document.getElementById("workspace").value;
   const title = element("h2", null, (outcome.ok ? outcome.body.engine : requestedEngine || "default engine") + " ");
   title.appendChild(element("small", null, "(" + outcome.seconds.toFixed(1) + " s round trip)"));
   card.appendChild(title);
@@ -328,14 +381,20 @@ function renderResult(requestedEngine, outcome) {
   for (const skipped of body.skipped_voiceprints) card.appendChild(element("div", "banner", "Skipped " + skipped.name + ": " + skipped.reason));
   if (body.entries.length === 0) card.appendChild(element("div", "evidence", "No words came back."));
 
-  for (const entry of body.entries) card.appendChild(renderEntry(entry));
+  // Turn numbers start at 1. The backend numbers them the same way, so a citation "turn 3" is the
+  // third entry shown here.
+  body.entries.forEach((entry, position) => card.appendChild(renderEntry(entry, card.id + "-turn" + (position + 1), position + 1)));
+
+  if (body.entries.length > 0) card.appendChild(summarizeControls(card, workspaceId, body.entries));
 
   return card;
 }
 
-function renderEntry(entry) {
+function renderEntry(entry, id, turnNumber) {
   const wrapper = element("div", entry.speaker_label === "Unclear" ? "entry unclear" : "entry");
+  wrapper.id = id;
   const who = element("div", "who");
+  who.appendChild(element("span", "num", "#" + turnNumber));
   who.appendChild(element("span", "time", clock(entry.start) + " – " + clock(entry.end)));
   who.appendChild(document.createTextNode(entry.speaker_label));
   who.appendChild(element("span", "badge", entry.language));
@@ -360,6 +419,141 @@ function renderEntry(entry) {
   wrapper.appendChild(text);
 
   return wrapper;
+}
+
+// --- summary: one panel per summarizer, every claim linked to the turns it came from --------
+
+const URDU_LETTERS = /[\u0600-\u06FF]/;
+
+function summarizeControls(card, workspaceId, entries) {
+  const controls = element("div");
+  const button = element("button", "primary", "Summarize this transcript");
+  const panels = element("div");
+  controls.appendChild(button);
+  controls.appendChild(panels);
+
+  button.addEventListener("click", async () => {
+    const choice = document.getElementById("summary-engine").value;
+    const engines = choice === "both" ? ["groq", "gemini"] : [choice];
+
+    button.disabled = true;
+    button.textContent = "Summarizing…";
+    panels.innerHTML = "";
+
+    // Only what the summarizer needs; the backend ignores the rest of an entry anyway.
+    const turns = entries.map((entry) => ({ speaker_label: entry.speaker_label, start: entry.start, text: entry.text }));
+    const outcomes = await Promise.all(engines.map((engine) => summarizeWith(workspaceId, turns, engine)));
+    outcomes.forEach((outcome, index) => panels.appendChild(renderSummary(card, engines[index], outcome)));
+
+    button.disabled = false;
+    button.textContent = "Summarize again";
+  });
+
+  return controls;
+}
+
+async function summarizeWith(workspaceId, turns, engine) {
+  const startedAt = performance.now();
+  try {
+    const body = await api("/workspaces/" + workspaceId + "/summarize", { method: "POST", body: { entries: turns, summary_engine: engine || null } });
+    return { ok: true, seconds: (performance.now() - startedAt) / 1000, body };
+  } catch (err) {
+    return { ok: false, seconds: (performance.now() - startedAt) / 1000, message: err.message };
+  }
+}
+
+function renderSummary(card, requestedEngine, outcome) {
+  const panel = element("div", "summary-panel");
+
+  if (!outcome.ok) {
+    panel.appendChild(element("h2", null, "Summary · " + (requestedEngine || "default summarizer")));
+    panel.appendChild(element("div", "failure", outcome.message));
+    return panel;
+  }
+
+  const body = outcome.body;
+  const attempts = body.attempts === 1 ? "first try" : "needed a retry";
+  panel.appendChild(element("h2", null, "Summary · " + body.engine + " "));
+  panel.firstChild.appendChild(element("small", null, "(" + body.model + ", " + attempts + ", " + outcome.seconds.toFixed(1) + " s)"));
+
+  panel.appendChild(element("h3", null, "Summary"));
+  panel.appendChild(listOf(card, body.summary, (item, li) => li.appendChild(textLine(item.text))));
+
+  panel.appendChild(element("h3", null, "Key discussion points"));
+  panel.appendChild(listOf(card, body.key_points, (item, li) => li.appendChild(textLine(item.text))));
+
+  panel.appendChild(element("h3", null, "Decisions"));
+  panel.appendChild(listOf(card, body.decisions, (item, li) => {
+    li.appendChild(textLine(item.decision));
+    li.appendChild(element("div", "who-line", "decided or proposed by: " + (item.decided_by || "not clear")));
+    li.appendChild(quoteLine(item.quote));
+  }));
+
+  panel.appendChild(element("h3", null, "Action items"));
+  panel.appendChild(listOf(card, body.action_items, (item, li) => {
+    li.appendChild(textLine(item.task));
+    li.appendChild(element("div", "who-line", "owner: " + (item.owner || "not named") + " · deadline: " + (item.deadline || "none said")));
+    li.appendChild(quoteLine(item.quote));
+  }));
+
+  return panel;
+}
+
+// One list item per claim: its content, its warnings, then a chip for every turn it cites.
+function listOf(card, items, fillItem) {
+  const list = element("ul");
+  if (items.length === 0) {
+    list.appendChild(element("li", "evidence", "None."));
+    return list;
+  }
+
+  for (const item of items) {
+    const li = element("li");
+    fillItem(item, li);
+    for (const warning of item.warnings) li.appendChild(element("div", "warning", "⚠ " + warning));
+    for (const citation of item.citations) li.appendChild(chipFor(card, citation));
+    list.appendChild(li);
+  }
+
+  return list;
+}
+
+function textLine(text) {
+  const line = element("div", null, text);
+  line.setAttribute("dir", "auto"); // an English sentence can hold an Urdu name
+  return line;
+}
+
+function quoteLine(quote) {
+  const isUrdu = URDU_LETTERS.test(quote);
+  const line = element("div", isUrdu ? "quote urdu" : "quote", isUrdu ? FSI + quote + PDI : quote);
+  if (isUrdu) {
+    line.setAttribute("dir", "rtl");
+    line.setAttribute("lang", "ur");
+  }
+  return line;
+}
+
+function chipFor(card, citation) {
+  const chip = element("button", "chip", clock(citation.start) + " · " + citation.speaker_label);
+  chip.title = "Turn #" + citation.turn_number + ". Jump to it and play from there.";
+  chip.addEventListener("click", () => jumpToTurn(card, citation));
+  return chip;
+}
+
+function jumpToTurn(card, citation) {
+  const entry = document.getElementById(card.id + "-turn" + citation.turn_number);
+  if (entry) {
+    entry.scrollIntoView({ block: "center", behavior: "smooth" });
+    entry.classList.add("flash");
+    setTimeout(() => entry.classList.remove("flash"), 1500);
+  }
+
+  const preview = document.getElementById("preview");
+  if (!preview.hidden) {
+    preview.currentTime = citation.start;
+    preview.play().catch(() => { /* the browser may block play(); the seek still happened */ });
+  }
 }
 </script>
 </body>

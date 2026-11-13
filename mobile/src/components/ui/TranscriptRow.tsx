@@ -11,7 +11,9 @@ import { UnknownSpeakerChip } from "./UnknownSpeakerChip";
 export type TranscriptSpeaker =
   | { kind: "member"; id: string; name: string }
   | { kind: "guest"; id: string; name: string }
-  | { kind: "unknown"; id: string; number: number };
+  | { kind: "unknown"; id: string; number: number }
+  // A stretch too short to tell. A label, not a person, and it cannot be renamed.
+  | { kind: "unclear" };
 
 export type SegmentLanguage = "en" | "ur" | "mixed";
 
@@ -44,7 +46,7 @@ export function TranscriptRow({
 
   // The segment's language sets the base direction. Mixed lines let the text decide.
   const direction = language === "ur" ? "rtl" : language === "en" ? "ltr" : "auto";
-  const barColor = speaker.kind === "unknown" ? colors.borderStrong : speakerHue(speaker.id);
+  const barColor = speaker.kind === "unknown" || speaker.kind === "unclear" ? colors.borderStrong : speakerHue(speaker.id);
 
   return (
     <View
@@ -78,6 +80,10 @@ export function TranscriptRow({
         {showSpeaker &&
           (speaker.kind === "unknown" ? (
             <UnknownSpeakerChip number={speaker.number} onPress={onRenamePress ?? (() => {})} />
+          ) : speaker.kind === "unclear" ? (
+            <Text variant="caption" tone="secondary">
+              Unclear
+            </Text>
           ) : (
             <SpeakerChip speakerId={speaker.id} name={speaker.name} isGuest={speaker.kind === "guest"} />
           ))}

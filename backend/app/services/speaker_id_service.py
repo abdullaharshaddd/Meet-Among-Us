@@ -11,13 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.core import ml_client, storage
 from app.core.config import SpeakerIdSettings, speaker_id_settings
-from app.core.exceptions import ClipNotInWorkspaceError
+from app.core.exceptions import ClipNotInWorkspaceError, ParticipantNotInWorkspaceError
 from app.core.vectors import cosine_similarity, normalise
 from app.models.user import User
 from app.models.voiceprint import Voiceprint
-from app.repositories import voiceprint_repository
+from app.repositories import voiceprint_repository, workspace_member_repository
 from app.schemas.enrollment import UploadUrlResponse
-from app.schemas.speaker_id import IdentifyResponse, SkippedVoiceprint, SpeakerTurn
+from app.schemas.speaker_id import IdentifyResponse, ParticipantChoice, SkippedVoiceprint, SpeakerTurn
 from app.services import permissions
 from app.services.enrollment_service import CONTENT_TYPES, UPLOAD_URL_EXPIRES_IN_SECONDS
 
@@ -284,11 +284,43 @@ def require_clip_access(db: Session, user: User, workspace_id: UUID, audio_key: 
         raise ClipNotInWorkspaceError("That audio wasn't uploaded for this workspace.")
 
 
+def require_participants(db: Session, workspace_id: UUID, participant_user_ids: list[UUID] | None) -> set[UUID] | None:
+    """None means no restriction. Anyone named must belong to this workspace, so a caller cannot
+    use the list to probe for people outside it."""
+    if participant_user_ids is None:
+        return None
+
+    wanted = set(participant_user_ids)
+    members = {member.user_id for member, _ in workspace_member_repository.list_with_users(db, workspace_id)}
+    outsiders = wanted - members
+
+    if outsiders:
+        raise ParticipantNotInWorkspaceError(
+            "These participants are not members of this workspace: " + ", ".join(sorted(str(i) for i in outsiders))
+        )
+
+    return wanted
+
+
+def restrict_to_participants(
+    rows: list[tuple[Voiceprint, User]], participant_ids: set[UUID] | None
+) -> list[tuple[Voiceprint, User]]:
+    if participant_ids is None:
+        return rows
+
+    return [(voiceprint, user) for voiceprint, user in rows if user.id in participant_ids]
+
+
 def identify_audio(
-    db: Session, workspace_id: UUID, audio_bytes: bytes, settings: SpeakerIdSettings
+    db: Session,
+    workspace_id: UUID,
+    audio_bytes: bytes,
+    settings: SpeakerIdSettings,
+    participant_ids: set[UUID] | None = None,
 ) -> IdentifyResponse:
     result = ml_client.find_segments(audio_bytes, settings)
-    rows = voiceprint_repository.list_for_workspace(db, workspace_id)
+    # A participant who is a member but never enrolled has no voiceprint, so cannot be matched.
+    rows = restrict_to_participants(voiceprint_repository.list_for_workspace(db, workspace_id), participant_ids)
     candidates, skipped = split_by_model_version(rows, result.model_version)
     runs = pool_into_runs(result.segments, candidates, settings)
     labelled = label_runs(runs, candidates, settings)
@@ -306,8 +338,23 @@ def identify(
     user: User,
     workspace_id: UUID,
     audio_key: str,
+    participant_user_ids: list[UUID] | None = None,
     settings: SpeakerIdSettings = speaker_id_settings,
 ) -> IdentifyResponse:
     require_clip_access(db, user, workspace_id, audio_key)
+    participant_ids = require_participants(db, workspace_id, participant_user_ids)
 
-    return identify_audio(db, workspace_id, storage.get_object_bytes(audio_key), settings)
+    return identify_audio(db, workspace_id, storage.get_object_bytes(audio_key), settings, participant_ids)
+
+
+def list_participant_choices(db: Session, user: User, workspace_id: UUID) -> list[ParticipantChoice]:
+    permissions.require_member(db, workspace_id, user.id)
+
+    return [
+        ParticipantChoice(
+            user_id=member_user.id,
+            display_name=member_user.display_name,
+            enrollment_status=member_user.enrollment_status.value,
+        )
+        for _, member_user in workspace_member_repository.list_with_users(db, workspace_id)
+    ]

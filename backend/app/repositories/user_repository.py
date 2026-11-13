@@ -67,3 +67,10 @@ def link_google_sub(db: Session, user: User, google_sub: str) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+
+def get_many(db: Session, user_ids: list[UUID]) -> list[User]:
+    if not user_ids:
+        return []
+
+    return list(db.scalars(select(User).where(User.id.in_(user_ids))))

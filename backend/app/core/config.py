@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 30
 
+    # Meeting recordings. The size limit is checked when the app confirms the upload, the duration
+    # limit when the audio is decoded during processing.
+    meeting_audio_max_bytes: int = 150_000_000
+    meeting_max_duration_sec: int = 1800
+    # A transcript longer than this is summarized in parts. Groq's free tier takes about 8,000 tokens
+    # a minute, and Urdu text costs roughly one token per two characters.
+    summary_part_max_chars: int = 6000
+
     # R2 is S3-compatible; boto3 talks to it via endpoint_url alone (app/core/storage.py).
     # Required (no default) like the other real secrets above — but note .env can still
     # hold them empty during dev, since Settings doesn't validate non-emptiness.
@@ -54,6 +62,24 @@ class Settings(BaseSettings):
     # that never sets it has no enrollment-harness route to hit at all, not
     # just one hidden behind a runtime check.
     dev_tools_enabled: bool = False
+
+    # Invite email via Gmail SMTP — docs/adr/0017-gmail-smtp-behind-notifier.md.
+    # Defaulted empty so the app and tests start without them; with no smtp_host the
+    # email sender reports "not configured" and the invite is marked failed (resendable).
+    # smtp_password is a Gmail *app password*, never the account password. .env only.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    # Defaults to smtp_user when blank; Gmail rewrites other From addresses anyway.
+    smtp_from_address: str = ""
+    # Short on purpose: the send runs in a background task, but a hung socket would
+    # still hold a worker thread.
+    smtp_timeout_seconds: int = 10
+    # https:// base of the page the emailed link opens, e.g. https://example.com/join.
+    # The token is appended as /<token>. Must be https: custom-scheme links are not
+    # clickable in most mail clients.
+    invite_link_base_url: str = ""
 
 
 class SpeakerIdSettings(BaseSettings):

@@ -111,14 +111,33 @@ def transcribe(
     workspace_id: UUID,
     audio_key: str,
     engine: str | None,
+    language: str = "auto",
+    participant_user_ids: list[UUID] | None = None,
     settings: SpeakerIdSettings = speaker_id_settings,
 ) -> TranscribeResponse:
     speaker_id_service.require_clip_access(db, user, workspace_id, audio_key)
+    # Checked before any provider call, so a bad id costs no quota.
+    participant_ids = speaker_id_service.require_participants(db, workspace_id, participant_user_ids)
     audio_bytes = storage.get_object_bytes(audio_key)
 
+    return transcribe_audio(db, workspace_id, audio_bytes, engine, language, participant_ids, settings)
+
+
+def transcribe_audio(
+    db: Session,
+    workspace_id: UUID,
+    audio_bytes: bytes,
+    engine: str | None,
+    language: str,
+    participant_ids: set[UUID] | None,
+    settings: SpeakerIdSettings = speaker_id_settings,
+) -> TranscribeResponse:
+    """The work itself, without the clip and membership checks. Meeting processing calls this directly,
+    because it has already checked that the audio belongs to the meeting."""
+
     # Transcribing first, so a missing API key fails before the slower speaker work starts.
-    transcript = ml_client.transcribe(audio_bytes, engine)
-    identified = speaker_id_service.identify_audio(db, workspace_id, audio_bytes, settings)
+    transcript = ml_client.transcribe(audio_bytes, engine, language)
+    identified = speaker_id_service.identify_audio(db, workspace_id, audio_bytes, settings, participant_ids)
 
     return TranscribeResponse(
         engine=transcript.engine,

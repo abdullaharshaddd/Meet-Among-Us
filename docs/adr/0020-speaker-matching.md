@@ -80,3 +80,20 @@ provisional.** In particular:
 - Overlapping speech gets one label. Known limitation, not addressed.
 - Two different outsiders next to each other with the same nearest member are separated only by the
   sounds-alike check, which is imperfect.
+
+## Update 2026-11-13: the attendee list decides who can be matched
+
+On the four `Recordings/` clips, with every enrolled member as a candidate, Vaniya's turns were
+often closest to mubashra, who was not in the room (docs/evaluation/recordings_run/). A real
+meeting knows who is in it, so candidates should be the attendees, not the whole workspace.
+
+- `/identify`, `/transcribe` and `/summarize` (with `audio_key`) take an optional
+  `participant_user_ids`. When given, only those members are candidates. When omitted, every enrolled
+  member is, as before.
+- Every id must belong to a member of the workspace, otherwise the request fails with 422 before any
+  audio work. An empty list is rejected too, since it would match nobody.
+- A participant who never enrolled has no voiceprint, so cannot be matched. Their speech comes out as
+  "Unknown Speaker N" like anyone else's.
+- The floor and margin rules are unchanged. This narrows who is compared, it does not retune.
+- **Meetings will pass their attendee list here** (host and invited members, guests excluded since
+  they have no voiceprint). Until meetings exist, the dev page `/dev/transcribe` has a member picker.

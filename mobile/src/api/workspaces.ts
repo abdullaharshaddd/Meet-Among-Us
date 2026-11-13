@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWorkspaceStore } from "@/store/workspaceStore";
-import { orbitMembers, type MockMember } from "@/mocks/members";
 import { api, unwrap } from "./client";
 import type { components } from "./types.gen";
 
@@ -53,32 +52,126 @@ export function useJoinWorkspace() {
   });
 }
 
-// Design shell data – replace with API data
-// The two functions below have no backend route yet, so they answer from src/mocks.
-// Screens only ever call these names, so swapping in real endpoints later touches this file alone.
+export type WorkspaceMember = components["schemas"]["WorkspaceMemberResponse"];
+export type Invite = components["schemas"]["InviteResponse"];
 
-export async function listMembers(workspaceId: string): Promise<MockMember[]> {
-  void workspaceId;
-
-  return orbitMembers;
-}
-
-export async function inviteMember(workspaceId: string, email: string): Promise<{ email: string }> {
-  void workspaceId;
-
-  return { email };
-}
+const membersKey = (workspaceId: string | undefined) => ["workspaces", workspaceId, "members"] as const;
+const invitesKey = (workspaceId: string | undefined) => ["workspaces", workspaceId, "invites"] as const;
 
 export function useMembers(workspaceId: string | undefined) {
   return useQuery({
-    queryKey: ["workspaces", workspaceId, "members"],
-    queryFn: () => listMembers(workspaceId ?? ""),
+    queryKey: membersKey(workspaceId),
     enabled: Boolean(workspaceId),
+    queryFn: async () =>
+      unwrap(await api.GET("/workspaces/{workspace_id}/members", { params: { path: { workspace_id: workspaceId ?? "" } } })),
+  });
+}
+
+export function useInvites(workspaceId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: invitesKey(workspaceId),
+    enabled: Boolean(workspaceId) && enabled,
+    queryFn: async () =>
+      unwrap(await api.GET("/workspaces/{workspace_id}/invites", { params: { path: { workspace_id: workspaceId ?? "" } } })),
+    // The email is sent in the background, so its status changes a moment after the invite is made.
+    refetchInterval: 5_000,
   });
 }
 
 export function useInviteMember(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (email: string) => inviteMember(workspaceId ?? "", email),
+    mutationFn: async (email: string) =>
+      unwrap(await api.POST("/workspaces/{workspace_id}/invites", { params: { path: { workspace_id: workspaceId ?? "" } }, body: { email } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
+  });
+}
+
+export function useRevokeInvite(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (inviteId: string) =>
+      unwrap(
+        await api.POST("/workspaces/{workspace_id}/invites/{invite_id}/revoke", {
+          params: { path: { workspace_id: workspaceId ?? "", invite_id: inviteId } },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
+  });
+}
+
+export function useResendInvite(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (inviteId: string) =>
+      unwrap(
+        await api.POST("/workspaces/{workspace_id}/invites/{invite_id}/resend", {
+          params: { path: { workspace_id: workspaceId ?? "", invite_id: inviteId } },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
+  });
+}
+
+export function useChangeRole(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string; role: "admin" | "member" }) =>
+      unwrap(
+        await api.PATCH("/workspaces/{workspace_id}/members/{user_id}/role", {
+          params: { path: { workspace_id: workspaceId ?? "", user_id: input.userId } },
+          body: { role: input.role },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: membersKey(workspaceId) }),
+  });
+}
+
+// Also how a person leaves: removing yourself.
+export function useRemoveMember(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) =>
+      unwrap(
+        await api.DELETE("/workspaces/{workspace_id}/members/{user_id}", {
+          params: { path: { workspace_id: workspaceId ?? "", user_id: userId } },
+        }),
+      ),
+    onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: membersKey(workspaceId) }), queryClient.invalidateQueries({ queryKey: workspacesKey })]),
+  });
+}
+
+export function useTransferOwnership(workspaceId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) =>
+      unwrap(
+        await api.POST("/workspaces/{workspace_id}/transfer-ownership", {
+          params: { path: { workspace_id: workspaceId ?? "" } },
+          body: { user_id: userId },
+        }),
+      ),
+    onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: membersKey(workspaceId) }), queryClient.invalidateQueries({ queryKey: workspacesKey })]),
+  });
+}
+
+// The long personal invite code from an invite email. It joins the workspace the same way a join code does.
+export function useAcceptInvite() {
+  const queryClient = useQueryClient();
+  const setActiveWorkspaceId = useWorkspaceStore((state) => state.setActiveWorkspaceId);
+
+  return useMutation({
+    mutationFn: async (token: string) => unwrap(await api.POST("/invites/accept", { body: { token: token.trim() } })),
+    onSuccess: (workspace) => {
+      setActiveWorkspaceId(workspace.id);
+
+      return queryClient.invalidateQueries({ queryKey: workspacesKey });
+    },
   });
 }

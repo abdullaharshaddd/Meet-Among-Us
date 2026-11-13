@@ -144,3 +144,29 @@ Plain-English definitions, added the first time each term is used in code.
 - **Bottom sheet** — a panel that slides up from the bottom of the screen over a dimmed background and can be dragged down to close.
 - **Hold to confirm** — a button that only acts after being pressed for a set time, shown by a ring filling up, used for things that cannot be undone like ending a meeting.
 - **Citation chip** — a small tag on an assistant answer that names the meeting and moment the answer came from, and jumps there when tapped.
+- **LLM (large language model)** — a program trained on a huge amount of text that writes a reply to whatever text you give it; here it reads a transcript and writes the summary.
+- **Prompted baseline** — the result you get from an LLM using only written instructions, with no extra training; it is the score a trained model has to beat.
+- **Groundedness** — whether every statement in a summary is actually backed by the words in the transcript it points to.
+- **Turn citation** — the number of a transcript line attached to a claim, so you can open that line and check the claim.
+- **JSON mode** — a setting that makes the LLM reply in a strict, machine-readable format instead of free-form prose.
+- **Tokens per minute (TPM)** — the cap on how much text a free API account may send and receive each minute, counted in small pieces of words called tokens.
+- **ROUGE** — a score for how many words and short word-runs a written summary shares with a human-written one.
+- **BERTScore** — a score for how close in meaning a written summary is to a human-written one, judged by a language model instead of by exact words.
+- **Invite token** — a long random string in the emailed invite; whoever holds it and is signed in can accept that one invite.
+- **Row lock** — a database promise that only one request at a time may change a given row, used so two people cannot accept the same invite at once.
+- **Devanagari** — the script Hindi is written in; Whisper sometimes writes Urdu speech in it by mistake, so we flag it and ask again as Urdu.
+- **Roman Urdu** — Urdu written in English letters, like "yaar deadline bohat qareeb hai"; we count it as English text because only the letters are looked at.
+- **Whisper** — the open speech-to-text model (Groq runs it for us) that turns audio into words with the second each one was said.
+- **Participant list** — the people who were actually in a meeting; only they are considered when naming who is speaking.
+- **Quote check** — after the summarizer answers, we confirm that each decision's and action item's quote really appears in the transcript lines it points to.
+- **Dropped item** — a decision or action item we removed because its quote was not in the lines it cited; the result reports how many were dropped.
+- **Channel mismatch** — comparing a voice recorded one way (a browser on a laptop) with one recorded another way (a phone); the match score drops even for the same person.
+- **Attendee** — one person listed on one meeting: a workspace member, a named guest, or a former member.
+- **Consent record** — one attendee's saved answer to "may this meeting be recorded", with the wording they saw.
+- **Meeting status** — where a meeting is: waiting for audio, processing, done, or failed.
+- **Failed step** — which of the two processing steps (transcript or summary) stopped, so a retry only redoes what is missing.
+- **Split-then-merge** — summarizing a long transcript in parts and joining the results, with the line numbers kept so every citation still points at the right line.
+- **Speaker rename** — telling the app that "Unknown Speaker 2" is really a named attendee or guest; it changes how that voice is shown in the meeting and nothing else.
+- **Former member** — what a deleted account's name becomes in meetings that stay.
+- **Anonymise** — replace a person's name with a neutral label while keeping the record itself.
+- **Re-authentication** — asking for the password again (or a fresh Google sign-in) before something that cannot be undone.

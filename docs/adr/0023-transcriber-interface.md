@@ -23,7 +23,7 @@ shape (words with text, start, end, plus the engine's detected language):
 - **ElevenLabs Scribe (`scribe_v2`)** is the comparison engine, with its own diarization turned off.
 - `TRANSCRIBER` picks the default and the `engine` request parameter overrides it, so one clip can
   go through both.
-- Urdu requests pass `language=ur` and a short Urdu prompt with English work words in English letters
+- (Partly superseded by ADR-0027: the default is now auto-detect, with a retry as Urdu.) Urdu requests pass `language=ur` and a short Urdu prompt with English work words in English letters
   (Groq only; Scribe has no prompt field). Any Devanagari in the output is reported as `script_warning`.
 - Audio is converted to 16 kHz mono FLAC. If it is still over Groq's size limit it is split at the
   longest silence in the back half of each chunk, and timestamps are shifted back onto one timeline.

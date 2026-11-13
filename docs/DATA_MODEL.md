@@ -113,6 +113,8 @@ docs/adr/0016-two-workspace-join-mechanisms.md.
 | `created_at` | timestamptz | |
 
 ### `projects`
+*Not built. Decision of 2026-11-13: no projects this round, meetings belong to the workspace. A later migration adds `projects` and a nullable `meetings.project_id`.*
+
 A "meeting project" — a scoped container. Members only see meetings in projects they belong to.
 
 | Column | Type | Notes |
@@ -134,35 +136,9 @@ A "meeting project" — a scoped container. Members only see meetings in project
 | `role` | enum | `lead` / `member` |
 | `joined_at` | timestamptz | |
 
-### `meetings`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK |
-| `project_id` | uuid | FK |
-| `title` | text | |
-| `kind` | enum | `scheduled` / `adhoc` |
-| `scheduled_start` | timestamptz | nullable for adhoc |
-| `actual_start`, `actual_end` | timestamptz | nullable |
-| `host_user_id` | uuid | FK — the device that plays the chirp |
-| `status` | enum | `scheduled` / `armed` / `recording` / `uploading` / `ready_to_process` / `processing` / `complete` / `failed` |
-| `consent_required` | bool | default true |
-| `created_at` | timestamptz | |
-
-### `meeting_attendees`
-Covers both real members and name-only guests.
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK |
-| `meeting_id` | uuid | FK |
-| `user_id` | uuid | nullable — null means a guest |
-| `guest_name` | text | nullable — set only when `user_id` is null |
-| `consent_given_at` | timestamptz | nullable |
-| `is_recording_device` | bool | false for guests, always |
-
-Constraint: exactly one of `user_id` / `guest_name` is non-null.
-
 ### `recording_tracks`
+*Not built. Comes with the recorder (chunks, chirp, several phones). Until then `meeting_audio` holds one file per meeting.*
+
 One row per device that recorded.
 
 | Column | Type | Notes |
@@ -196,26 +172,191 @@ One row per device that recorded.
 
 Unique on `(track_id, sequence)` — makes retries idempotent.
 
+---
+
+## Meetings and their results
+
+Built by migration `5b9ad24f5c5e`. Approved 2026-11-13.
+
+Decisions behind this design:
+- **No projects this round.** Meetings belong to a workspace. `projects`, `project_members` and a nullable
+  `meetings.project_id` come later in their own migration.
+- **Who sees a meeting:** the host and the attendees only. Everyone else in the workspace, including admins and the
+  owner, gets 404. Other workspaces always get 404.
+- **A rename is a mapping row** (`speaker_renames`), not a per-segment field. An Unknown Speaker number is one voice for the
+  whole meeting, so one row fixes every segment and can be undone without rewriting segments.
+- **Consent hangs off the attendee row** (`consent_records.attendee_id`), so there is one place to anonymise when an
+  account is deleted. `consent_given_at` is therefore not on the attendee.
+- **Recording-era fields are left out until the recorder exists:** `kind`, `scheduled_start`, `actual_start/end`,
+  `consent_required` (consent is always required), `is_recording_device`.
+- `meetings.status` has four values, the states the app shows. Recording states return with the recorder.
+
+### `meetings`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `workspace_id` | uuid | FK → workspaces, on delete cascade |
+| `title` | text | |
+| `host_user_id` | uuid | FK → users, nullable, on delete set null. Null means the host deleted their account ("Former member") |
+| `status` | enum | `waiting_for_audio` / `processing` / `done` / `failed` |
+| `processing_started_at` | timestamptz | nullable. Lets startup spot a meeting stuck in `processing` after a server restart |
+| `transcribed_at` | timestamptz | nullable. Set when the transcript is saved |
+| `summarized_at` | timestamptz | nullable. Set when the summary is saved |
+| `failed_step` | enum | nullable: `transcript` / `summary`. The step to retry |
+| `failure_reason` | text | nullable. A readable sentence, never a stack trace or a key |
+| `created_at`, `updated_at` | timestamptz | |
+
+Index on `(workspace_id, created_at)`.
+
+Status moves: `waiting_for_audio` → (audio confirmed and every attendee has consented) → `processing` → `done`
+or `failed`. A failed meeting can be retried: the steps already saved (`transcribed_at`, `summarized_at`)
+are kept and only the failed step runs again. Audio can be replaced while the meeting is `waiting_for_audio`
+or `failed`.
+
+### `meeting_attendees`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `user_id` | uuid | nullable, FK → users, on delete set null |
+| `guest_name` | text | nullable, set only for a named outside guest |
+| `former_member` | bool | default false. True after the account was deleted: `user_id` is then null and the app shows "Former member" |
+| `created_at` | timestamptz | |
+
+Constraint: exactly one of (`user_id` is not null), (`guest_name` is not null), (`former_member` is true).
+Unique on `(meeting_id, user_id)` where `user_id` is not null. Guest names are unique per meeting, ignoring case.
+The host is always an attendee (a service rule, not a constraint).
+
 ### `consent_records`
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | PK |
-| `meeting_id` | uuid | FK |
-| `user_id` | uuid | nullable |
-| `guest_name` | text | nullable |
-| `granted` | bool | |
-| `granted_at` | timestamptz | |
-| `method` | enum | `in_app` / `verbal_attested_by_host` |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `attendee_id` | uuid | FK → meeting_attendees, on delete cascade, unique. One current answer per attendee |
+| `granted` | bool | false means the attendee declined |
+| `granted_at` | timestamptz | when the answer was given |
+| `method` | enum | `in_app` / `verbal_attested_by_host` (the host answering for a named guest) |
+| `recorded_by_user_id` | uuid | nullable, FK → users, on delete set null. The host who attested, for `verbal_attested_by_host` |
+| `notice_version` | text | which wording the person agreed to, for example `2026-11-v1`. It names the outside services audio is sent to |
+
+Rule: processing starts only when every attendee has a row with `granted = true`. The host can remove any attendee
+who declines or does not show up (never the host themselves), so one missing person cannot block processing forever.
+Attendees can only be changed while the meeting is `waiting_for_audio` or `failed`.
+
+### `meeting_audio`
+One uploaded file per meeting for now.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade, unique |
+| `audio_key` | text | R2 object key, under `meetings/{meeting_id}/` |
+| `audio_format` | enum | `flac` / `wav` / `m4a` / `webm` / `ogg` |
+| `size_bytes` | bigint | nullable, filled when the upload is confirmed |
+| `duration_sec` | float | nullable, filled by processing. Over 1800 s fails the meeting with a readable reason |
+| `upload_requested_at` | timestamptz | |
+| `uploaded_at` | timestamptz | nullable. Set when the app confirms the upload. Null means still waiting |
+
+### `transcript_segments`
+Never edited after saving. Renames live in `speaker_renames`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `position` | int | 1-based turn number. This is the number citations use. Unique with `meeting_id` |
+| `start_sec`, `end_sec` | float | |
+| `text` | text | |
+| `language` | enum | `ur` / `en` / `mixed` / `unknown` (from the script of the text) |
+| `speaker_kind` | enum | `member` / `unknown` / `unclear` |
+| `speaker_user_id` | uuid | nullable, FK → users, on delete set null. With kind `member` and a null id, the app shows "Former member" |
+| `unknown_number` | int | nullable, set when kind is `unknown` (the N in "Unknown Speaker N") |
+| `evidence` | jsonb | nullable. Best score, runner-up, margin, floor. For debugging, never shown to users |
+
+### `speaker_renames`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `unknown_number` | int | which "Unknown Speaker N" |
+| `attendee_id` | uuid | FK → meeting_attendees, on delete cascade. A member or a guest. Typing a new outside name first creates a guest attendee |
+| `renamed_by_user_id` | uuid | nullable, FK → users, on delete set null |
+| `created_at` | timestamptz | |
+
+Unique on `(meeting_id, unknown_number)`. Applies to every segment, decision and action item that carries
+that number. Not used to build voiceprints. "Unclear" cannot be renamed, since it is not a voice group.
+
+### `summaries`
+One per meeting. Summary sentences and key points are never queried one by one, so they stay as JSON.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade, unique |
+| `engine`, `model` | text | for example `groq`, `openai/gpt-oss-120b` |
+| `attempts` | int | 2 means the first reply failed the checks |
+| `parts` | int | 1 for one request, more when a long transcript was split and merged |
+| `dropped_decisions`, `dropped_action_items` | int | items removed because the transcript did not back them (ADR-0026) |
+| `sentences` | jsonb | list of `{text, turns: [int], warnings: [text]}` |
+| `key_points` | jsonb | same shape |
+| `created_at` | timestamptz | |
+
+### `decisions`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `position` | int | order in the summary |
+| `decision` | text | |
+| `quote` | text | copied from a cited turn, original script |
+| `turns` | int[] | citations: `transcript_segments.position` values. Time and speaker are read from the segments, so a rename shows up in citations too |
+| `decided_by_attendee_id` | uuid | nullable, FK → meeting_attendees, on delete set null |
+| `decided_by_unknown_number` | int | nullable |
+| `warnings` | text[] | |
+
+### `action_items`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `meeting_id` | uuid | FK → meetings, on delete cascade |
+| `position` | int | |
+| `task` | text | |
+| `deadline_text` | text | nullable, as said, not parsed |
+| `quote` | text | |
+| `turns` | int[] | citations, as in `decisions` |
+| `owner_attendee_id` | uuid | nullable, FK → meeting_attendees, on delete set null |
+| `owner_unknown_number` | int | nullable |
+| `warnings` | text[] | |
+| `done_at` | timestamptz | nullable. Null means not done |
+| `done_by_user_id` | uuid | nullable, FK → users, on delete set null |
+
+Who is named, for decisions and action items: if the attendee id is set, that attendee (a guest name, a member,
+or "Former member"). Otherwise, if the unknown number is set, the renamed name or "Unknown Speaker N".
+Otherwise "owner not identified" or "speaker not identified". Any attendee may mark an item done or undone.
+
+### What deleting an account touches
+| Data | On account deletion |
+|---|---|
+| `users`, `voiceprints`, `enrollment_samples`, `refresh_tokens` | Deleted, with the enrollment audio in R2 |
+| `invites` they sent | All deleted (pending or not, since `invited_by_user_id` cannot stay empty). `accepted_by_user_id` is set to null |
+| `workspace_members` | Their rows are deleted |
+| Workspaces they own | Sole member: the workspace goes, with its meetings, audio in R2 and everything under them (cascade). Otherwise deletion is blocked until ownership is transferred |
+| `meetings.host_user_id`, `transcript_segments.speaker_user_id`, `speaker_renames.renamed_by_user_id`, `consent_records.recorded_by_user_id`, `action_items.done_by_user_id` | Set to null |
+| `meeting_attendees` | `user_id` set to null and `former_member` set to true, so transcripts, attendee lists and task owners read "Former member" |
+| `consent_records` | Kept, because they belong to the attendee row. The record that the person agreed stays with the meeting |
+
+### Indexes
+`meetings (workspace_id, created_at)`, `meeting_attendees (user_id)`, `transcript_segments (meeting_id, position)` unique.
+The migration also declares `ix_workspace_members_user_id` and `ix_invites_workspace_id_email` in the models, which already
+existed in the database, so `alembic check` is clean.
 
 ---
 
 ## Reserved for later milestones — do not build yet
 
-`transcript_segments`, `summaries`, `decisions`, `action_items`, `decision_status_history`, `embeddings_index`, `agent_tool_calls`.
+`decision_status_history`, `embeddings_index`, `agent_tool_calls`, and the projects and recording tables marked above.
 
 Listed here only so nobody accidentally reuses these names for something else.
-
-Note for when `transcript_segments` is designed: renaming an Unknown Speaker to an outside guest (by typing a name) creates a `meeting_attendees` row with `guest_name` and no voiceprint, and every renamed segment will need a field that carries that per-segment label, for that meeting only.
 
 ---
 
@@ -228,3 +369,9 @@ Note for when `transcript_segments` is designed: renaming an Unknown Speaker to 
 5. A user can be in many workspaces; a voiceprint is shared across all of them.
 6. Exactly one `workspace_members` row per workspace has `role='owner'`, matching `workspaces.owner_user_id`. Transfer, never delete-and-recreate.
 7. An `invites` row's `accepted_by_user_id` need not match its `email` — whoever holds the token and is signed in can accept it.
+8. Every meeting belongs to one workspace. Someone who may not see it gets 404, never 403.
+9. A meeting cannot enter `processing` unless every attendee has a granted consent record.
+10. Segments are never edited. A rename is a `speaker_renames` row, and citations are turn numbers.
+11. A guest has no account and no voiceprint. "Unknown Speaker N" and "Unclear" are labels, never attendees. A
+    `former_member` attendee is neither a guest nor an account.
+12. Only members who are attendees are passed to speaker matching as `participant_user_ids`.

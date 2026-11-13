@@ -15,7 +15,9 @@ def get(db: Session, workspace_id: UUID, user_id: UUID) -> WorkspaceMember | Non
     ).scalar_one_or_none()
 
 
-def create(db: Session, *, workspace_id: UUID, user_id: UUID, role: WorkspaceRole) -> WorkspaceMember:
+def create(
+    db: Session, *, workspace_id: UUID, user_id: UUID, role: WorkspaceRole, commit: bool = True
+) -> WorkspaceMember:
     member = WorkspaceMember(
         workspace_id=workspace_id,
         user_id=user_id,
@@ -23,8 +25,13 @@ def create(db: Session, *, workspace_id: UUID, user_id: UUID, role: WorkspaceRol
         can_create_projects=role != WorkspaceRole.MEMBER,
     )
     db.add(member)
-    db.commit()
-    db.refresh(member)
+    # commit=False lets a caller (invite acceptance) make this and another write one
+    # atomic transaction; it must then commit or roll back itself.
+    if commit:
+        db.commit()
+        db.refresh(member)
+    else:
+        db.flush()
 
     return member
 
@@ -38,3 +45,16 @@ def list_with_users(db: Session, workspace_id: UUID) -> list[tuple[WorkspaceMemb
     ).all()
 
     return [(member, user) for member, user in rows]
+
+
+def set_role(db: Session, member: WorkspaceMember, role: WorkspaceRole) -> WorkspaceMember:
+    member.role = role
+    member.can_create_projects = role != WorkspaceRole.MEMBER
+    db.flush()
+
+    return member
+
+
+def delete(db: Session, member: WorkspaceMember) -> None:
+    db.delete(member)
+    db.flush()

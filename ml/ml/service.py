@@ -12,9 +12,9 @@ from typing import Literal
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from ml import audio, config, embedding, quality, segments
+from ml import audio, config, embedding, quality, segments, summarizer
 from ml.transcription import base as transcription_base
 from ml.transcription import engines, pipeline
 
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     # quality.run_quality_gate() instead, since it's cheap enough not to matter.
     audio.check_ffmpeg_installed()
     embedding.load_model()
-    config.warn_about_missing_keys(config.load_config())
+    config.warn_about_missing_keys(config.load_config(), config.load_summary_config())
     yield
 
 
@@ -56,6 +56,29 @@ class SegmentsResponse(BaseModel):
     model_version: str
     duration_sec: float
     segments: list[SegmentResponse]
+
+
+# Bump when the backend starts to rely on something new. The backend compares this at startup and warns
+# when the ML service it talks to is older than it needs.
+API_VERSION = 2
+CAPABILITIES = ["transcribe_language_auto", "summarize_unnamed_label", "duration"]
+
+
+@app.get("/version")
+def version() -> dict:
+    return {"api_version": API_VERSION, "capabilities": CAPABILITIES}
+
+
+class DurationResponse(BaseModel):
+    duration_sec: float
+
+
+@app.post("/duration", response_model=DurationResponse)
+async def duration(request: Request) -> DurationResponse:
+    """Only decodes the audio. Lets the backend refuse a too-long recording before paying for transcription."""
+    samples, sample_rate = audio.decode(await request.body())
+
+    return DurationResponse(duration_sec=samples.shape[0] / sample_rate)
 
 
 @app.get("/health")
@@ -142,7 +165,7 @@ def transcription_error_handler(request: Request, exc: transcription_base.Transc
 async def transcribe(
     request: Request,
     engine: Literal["groq", "elevenlabs"] | None = Query(default=None),
-    language: Literal["ur", "en", "auto"] = Query(default="ur"),
+    language: Literal["ur", "en", "auto"] = Query(default="auto"),
 ) -> TranscribeResponse:
     settings = config.load_config()
     chosen = engine or settings.default_engine
@@ -150,9 +173,11 @@ async def transcribe(
     audio_bytes = await request.body()
     samples, sample_rate = audio.decode(audio_bytes)
     max_bytes = settings.groq_max_bytes if chosen == "groq" else None
-    result, requests_made = pipeline.transcribe_samples(
-        samples, sample_rate, transcriber, None if language == "auto" else language, max_bytes
-    )
+
+    if language == "auto":
+        result, requests_made = pipeline.transcribe_auto(samples, sample_rate, transcriber, max_bytes)
+    else:
+        result, requests_made = pipeline.transcribe_samples(samples, sample_rate, transcriber, language, max_bytes)
 
     return TranscribeResponse(
         engine=chosen,
@@ -161,4 +186,36 @@ async def transcribe(
         script_warning=transcription_base.script_warning(result.words),
         requests_made=requests_made,
         duration_sec=samples.shape[0] / sample_rate,
+    )
+
+
+class SummarizeRequest(BaseModel):
+    turns: list[summarizer.Turn] = Field(min_length=1)
+
+
+class SummarizeResponse(summarizer.SummaryOutput):
+    engine: str
+    model: str
+    attempts: int  # 2 means the first reply failed the checks and the retry passed
+    dropped_decisions: int  # decisions removed because the transcript did not back them
+    dropped_action_items: int
+
+
+# A plain def, not async: the call to the provider blocks, so FastAPI runs it in a worker thread.
+@app.post("/summarize", response_model=SummarizeResponse)
+def summarize(
+    body: SummarizeRequest, engine: Literal["groq", "gemini"] | None = Query(default=None)
+) -> SummarizeResponse:
+    settings = config.load_summary_config()
+    chosen = engine or settings.default_engine
+    chat_summarizer = summarizer.build_summarizer(chosen, settings)
+    result = summarizer.summarize_with_retry(chat_summarizer, body.turns)
+
+    return SummarizeResponse(
+        **result.output.model_dump(),
+        engine=chosen,
+        model=chat_summarizer.model,
+        attempts=result.attempts,
+        dropped_decisions=result.dropped_decisions,
+        dropped_action_items=result.dropped_action_items,
     )

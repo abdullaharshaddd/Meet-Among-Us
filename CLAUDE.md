@@ -1,9 +1,11 @@
 # CLAUDE.md — AI Meeting Intelligence Agent
 
 Bilingual (English–Urdu) meeting intelligence for **in-person, multi-speaker** meetings.
-Final-year project. Three developers. Milestone 1 scope: **signup → workspace → voice enrollment → project → meeting → recorded and uploaded audio.**
+Final-year project. Three developers. FYP-1 scope: **signup → workspace → voice enrollment → project → meeting → recorded and uploaded audio → speaker identification → transcription → summarization.**
 
-Transcription, diarization, summarization, RAG and the agent layer are **later milestones**. Do not build them now. Do not stub them speculatively.
+Speaker identification, transcription and summarization are **in scope for FYP-1**. RAG, the agent layer and fine-tuning are **later**. Do not build them now. Do not stub them speculatively.
+
+Projects, meetings and the recording pipeline (Phase 5 onwards) and the Android build are postponed until after the transcription and summarization work.
 
 ---
 
@@ -27,7 +29,7 @@ Do not revisit these without being asked. They are settled.
 |---|---|
 | Mobile | Expo (React Native), TypeScript. EAS **development build** APK, not Expo Go. Android first, iOS-compatible code. |
 | Backend | FastAPI (Python 3.11+), Pydantic v2, SQLAlchemy 2.0, Alembic migrations |
-| Database | PostgreSQL (Neon free tier) |
+| Database | PostgreSQL (Supabase free tier). App uses the transaction pooler, migrations use the direct connection. See docs/adr/0001-supabase-pooler-vs-direct-connection.md. |
 | Object storage | Cloudflare R2, S3-compatible SDK (zero egress fees — this is why, not S3) |
 | Email | Gmail SMTP for now — Resend's free tier can't send to third parties until the sending domain is verified. See docs/adr/0017-gmail-smtp-behind-notifier.md. |
 | Push | Expo Push Notifications |

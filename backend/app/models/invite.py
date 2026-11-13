@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import CITEXT, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
@@ -23,6 +23,8 @@ class EmailStatus(str, enum.Enum):
 
 class Invite(Base):
     __tablename__ = "invites"
+    # Looked up on every invite creation (duplicate check) and every pending-invite list.
+    __table_args__ = (Index("ix_invites_workspace_id_email", "workspace_id", "email"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid7)
     scope: Mapped[InviteScope] = mapped_column(

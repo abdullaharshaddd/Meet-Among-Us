@@ -1,56 +1,62 @@
-import { View } from "react-native";
+import { useState } from "react";
+import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
-import { BilingualText, BottomDock, Button, Header, Input, Screen, Text, useToast } from "@/components/ui";
 import { useActiveWorkspace, useInviteMember } from "@/api/workspaces";
-import { useValidatedField, validators } from "@/hooks/useValidatedField";
-import { playHaptic } from "@/lib/haptics";
+import { Button, Card, Header, Input, LargeTitle, Screen, Text, useToast } from "@/components/ui";
 import { layout, space } from "@/theme/tokens";
 
-export default function InviteMemberScreen() {
+// Two ways in: the workspace's join code (share it anywhere), or an email invite that also carries a personal code.
+export default function InviteScreen() {
   const router = useRouter();
   const toast = useToast();
   const { workspace } = useActiveWorkspace();
-  const inviteMember = useInviteMember(workspace?.id);
-  const email = useValidatedField(validators.email);
+  const invite = useInviteMember(workspace?.id);
+  const [email, setEmail] = useState("");
 
-  const isValid = email.value.length > 0 && validators.email(email.value) === undefined;
-
-  const send = async () => {
-    await inviteMember.mutateAsync(email.value.trim());
-
-    playHaptic("confirm");
-    toast.show(`Invite sent to ${email.value.trim()}`);
-    router.back();
+  const send = () => {
+    invite.mutate(email.trim(), {
+      onSuccess: () => {
+        toast.show(`Invite created for ${email.trim()}. The email is sending.`);
+        setEmail("");
+        router.back();
+      },
+    });
   };
 
   return (
     <Screen>
-      <Header onBack={() => router.back()} />
+      <Header title="Invite" onBack={() => router.back()} />
 
-      <View style={{ flex: 1, paddingHorizontal: layout.screenGutter, paddingTop: space.lg, gap: space.xl }}>
-        <View style={{ gap: space.sm }}>
-          <BilingualText variant="displayLg">Invite a teammate</BilingualText>
-          <Text variant="body" tone="secondary">
-            They get an email with a link to join {workspace?.name ?? "this workspace"}.
+      <ScrollView contentContainerStyle={{ paddingHorizontal: layout.screenGutter, paddingTop: space.lg, paddingBottom: space["5xl"], gap: layout.sectionGap }} keyboardShouldPersistTaps="handled">
+        <LargeTitle>{`Invite to ${workspace?.name ?? "workspace"}`}</LargeTitle>
+
+        {workspace?.join_code && workspace.code_joining_enabled && (
+          <Card style={{ gap: space.sm }}>
+            <Text variant="label" tone="secondary">
+              Join code
+            </Text>
+            <Text variant="displayLg" selectable>
+              {workspace.join_code}
+            </Text>
+            <Text variant="callout" tone="secondary">
+              Anyone with this code can join. They open Settings, choose "Join with a code", and type it.
+            </Text>
+          </Card>
+        )}
+
+        <View style={{ gap: space.md }}>
+          <Text variant="label" tone="secondary">
+            Or send an email invite
           </Text>
+          <Input label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} placeholder="name@example.com" />
+          {invite.isError && (
+            <Text variant="callout" tone="danger">
+              {invite.error instanceof Error ? invite.error.message : "Couldn't create the invite."}
+            </Text>
+          )}
+          <Button label="Send invite" loading={invite.isPending} disabled={!email.includes("@")} onPress={send} />
         </View>
-
-        <Input
-          label="Email"
-          value={email.value}
-          onChangeText={email.setValue}
-          onBlur={email.onBlur}
-          error={email.error}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoFocus
-        />
-      </View>
-
-      <BottomDock aboveTabBar={false}>
-        <Button label="Send invite" size="dock" disabled={!isValid} loading={inviteMember.isPending} onPress={send} />
-      </BottomDock>
+      </ScrollView>
     </Screen>
   );
 }

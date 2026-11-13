@@ -14,20 +14,21 @@ export interface MeetingCardProps {
   whenLabel: string;
   // Duration for a past meeting, or the running time for a live one.
   durationLabel?: string;
-  projectName: string;
+  // A line under the title, like "Hosted by Sara · 3 people".
+  subtitle: string;
   people: StackPerson[];
   status: MeetingCardStatus;
   onPress: () => void;
 }
 
-export function MeetingCard({ title, whenLabel, durationLabel, projectName, people, status, onPress }: MeetingCardProps) {
+export function MeetingCard({ title, whenLabel, durationLabel, subtitle, people, status, onPress }: MeetingCardProps) {
   const isLive = status === "live";
 
   return (
     <Card
       variant={isLive ? "live" : "default"}
       onPress={onPress}
-      accessibilityLabel={`${title}, ${whenLabel}, ${projectName}`}
+      accessibilityLabel={`${title}, ${whenLabel}, ${subtitle}`}
       style={{ gap: space.md }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.md }}>
@@ -36,6 +37,7 @@ export function MeetingCard({ title, whenLabel, durationLabel, projectName, peop
         </Text>
 
         {isLive && <Badge label="Live" variant="live" />}
+        {status === "upcoming" && <Badge label="Waiting for audio" variant="outline" />}
         {status === "processing" && <Badge label="Processing" variant="warning" />}
         {status === "failed" && <Badge label="Failed" variant="danger" />}
       </View>
@@ -45,7 +47,7 @@ export function MeetingCard({ title, whenLabel, durationLabel, projectName, peop
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.md }}>
         <View style={{ flexShrink: 1, gap: space.xxs }}>
           <Text variant="callout" tone="secondary" numberOfLines={1}>
-            {projectName}
+            {subtitle}
           </Text>
           {!isLive && durationLabel && (
             <Text variant="mono" tone="secondary">

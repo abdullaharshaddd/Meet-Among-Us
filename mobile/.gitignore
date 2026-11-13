@@ -48,3 +48,9 @@ example
 
 # screenshots from npm run shots
 .shots/
+
+# e2e screenshots and output
+e2e/out/
+e2e/*.png
+e2e/*.txt
+e2e/*.json

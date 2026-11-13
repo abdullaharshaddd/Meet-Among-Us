@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
-import { BilingualText, BottomDock, Button, Header, Screen, Text } from "@/components/ui";
+import { BilingualText, BottomDock, Button, Header, Input, Screen, Text } from "@/components/ui";
 import { ApiError } from "@/api/client";
-import { useJoinWorkspace } from "@/api/workspaces";
+import { useAcceptInvite, useJoinWorkspace } from "@/api/workspaces";
 import { cleanJoinCode, formatJoinCode, isCompleteJoinCode } from "@/lib/joinCode";
 import { playHaptic } from "@/lib/haptics";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -23,6 +23,8 @@ export default function JoinWorkspaceScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const joinWorkspace = useJoinWorkspace();
+  const acceptInvite = useAcceptInvite();
+  const [inviteCode, setInviteCode] = useState("");
   const [code, setCode] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [offeredCode, setOfferedCode] = useState<string | null>(null);
@@ -117,6 +119,22 @@ export default function JoinWorkspaceScreen() {
               <Text variant="mono">Paste {formatJoinCode(offeredCode)}</Text>
             </Pressable>
           )}
+        </View>
+
+        <View style={{ gap: space.md }}>
+          <Input label="Or a personal invite code from an email" value={inviteCode} onChangeText={setInviteCode} autoCapitalize="none" autoCorrect={false} placeholder="Paste the long code" />
+          {acceptInvite.isError && (
+            <Text variant="caption" tone="danger">
+              {acceptInvite.error instanceof Error ? acceptInvite.error.message : "That invite code didn't work."}
+            </Text>
+          )}
+          <Button
+            label="Use invite code"
+            variant="secondary"
+            disabled={inviteCode.trim().length < 20}
+            loading={acceptInvite.isPending}
+            onPress={() => acceptInvite.mutate(inviteCode, { onSuccess: () => router.replace("/(app)/meetings") })}
+          />
         </View>
       </View>
 

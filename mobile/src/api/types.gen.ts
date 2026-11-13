@@ -89,6 +89,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/account/deletion-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Deletion Preview */
+        get: operations["deletion_preview_account_deletion_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Account */
+        post: operations["delete_account_account_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/enrollment/passages": {
         parameters: {
             query?: never;
@@ -209,6 +243,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces/{workspace_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Members */
+        get: operations["list_members_workspaces__workspace_id__members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/members/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change Member Role */
+        patch: operations["change_member_role_workspaces__workspace_id__members__user_id__role_patch"];
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Member */
+        delete: operations["remove_member_workspaces__workspace_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/transfer-ownership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer Ownership */
+        post: operations["transfer_ownership_workspaces__workspace_id__transfer_ownership_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workspaces/{workspace_id}": {
         parameters: {
             query?: never;
@@ -260,6 +362,400 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces/{workspace_id}/transcribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transcribe Clip */
+        post: operations["transcribe_clip_workspaces__workspace_id__transcribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/summarize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Summarize Transcript */
+        post: operations["summarize_transcript_workspaces__workspace_id__summarize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Invites */
+        get: operations["list_invites_workspaces__workspace_id__invites_get"];
+        put?: never;
+        /** Create Invite */
+        post: operations["create_invite_workspaces__workspace_id__invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/invites/{invite_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Invite */
+        post: operations["revoke_invite_workspaces__workspace_id__invites__invite_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/invites/{invite_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend Invite */
+        post: operations["resend_invite_workspaces__workspace_id__invites__invite_id__resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Invite */
+        post: operations["preview_invite_invites_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invite */
+        post: operations["accept_invite_invites_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/meetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Meetings */
+        get: operations["list_meetings_workspaces__workspace_id__meetings_get"];
+        put?: never;
+        /** Create Meeting */
+        post: operations["create_meeting_workspaces__workspace_id__meetings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/consent-notice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consent Notice */
+        get: operations["consent_notice_meetings_consent_notice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Meeting */
+        get: operations["get_meeting_meetings__meeting_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Meeting Status */
+        get: operations["get_meeting_status_meetings__meeting_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Attendee */
+        post: operations["add_attendee_meetings__meeting_id__attendees_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees/{attendee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Attendee */
+        delete: operations["remove_attendee_meetings__meeting_id__attendees__attendee_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/attendees/{attendee_id}/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Consent */
+        put: operations["set_consent_meetings__meeting_id__attendees__attendee_id__consent_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/audio/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Audio Upload */
+        post: operations["request_audio_upload_meetings__meeting_id__audio_upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/audio/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Audio Uploaded */
+        post: operations["confirm_audio_uploaded_meetings__meeting_id__audio_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Processing */
+        post: operations["retry_processing_meetings__meeting_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{meeting_id}/speaker-renames/{unknown_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename Speaker */
+        put: operations["rename_speaker_meetings__meeting_id__speaker_renames__unknown_number__put"];
+        post?: never;
+        /** Clear Rename */
+        delete: operations["clear_rename_meetings__meeting_id__speaker_renames__unknown_number__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/action-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tasks */
+        get: operations["list_tasks_me_action_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/action-items/{action_item_id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Action Item Done */
+        put: operations["set_action_item_done_action_items__action_item_id__done_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sample Measurements */
+        get: operations["sample_measurements_dev_enroll_api_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Diagnostics */
+        get: operations["diagnostics_dev_enroll_api_diagnostics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Users */
+        get: operations["admin_users_dev_enroll_api_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -281,6 +777,128 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptInviteRequest */
+        AcceptInviteRequest: {
+            /** Token */
+            token: string;
+        };
+        /** ActionItemResponse */
+        ActionItemResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string;
+            /** Deadline Text */
+            deadline_text: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
+            /** Done */
+            done: boolean;
+            /** Done At */
+            done_at: string | null;
+        };
+        /** AddAttendeeRequest */
+        AddAttendeeRequest: {
+            /** User Id */
+            user_id?: string | null;
+            /** Guest Name */
+            guest_name?: string | null;
+        };
+        /** AdminUserRow */
+        AdminUserRow: {
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name: string;
+            /** Enrollment Status */
+            enrollment_status: string;
+            /** Accepted Sample Count */
+            accepted_sample_count: number;
+            /** Total Sample Count */
+            total_sample_count: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number | null;
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number | null;
+        };
+        /** AttendeeResponse */
+        AttendeeResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "member" | "guest" | "former_member";
+            /** Name */
+            name: string;
+            /** User Id */
+            user_id: string | null;
+            /** Is Host */
+            is_host: boolean;
+            /** Is Me */
+            is_me: boolean;
+            /** Enrolled */
+            enrolled: boolean | null;
+            consent: components["schemas"]["ConsentResponse"] | null;
+        };
+        /**
+         * AudioFormat
+         * @enum {string}
+         */
+        AudioFormat: "flac" | "wav" | "m4a" | "webm" | "ogg";
+        /** AudioResponse */
+        AudioResponse: {
+            /** Uploaded */
+            uploaded: boolean;
+            /** Uploaded At */
+            uploaded_at: string | null;
+            /** Size Bytes */
+            size_bytes: number | null;
+            /** Duration Sec */
+            duration_sec: number | null;
+        };
+        /** ChangeRoleRequest */
+        ChangeRoleRequest: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "admin" | "member";
+        };
+        /**
+         * Citation
+         * @description A transcript turn that backs a claim, so the claim can be checked.
+         */
+        Citation: {
+            /** Turn Number */
+            turn_number: number;
+            /** Start */
+            start: number;
+            /** Speaker Label */
+            speaker_label: string;
+        };
+        /** CitationResponse */
+        CitationResponse: {
+            /** Turn Number */
+            turn_number: number;
+            /** Start */
+            start: number;
+            /** Speaker Name */
+            speaker_name: string;
+        };
         /** ClipUploadRequest */
         ClipUploadRequest: {
             /**
@@ -288,13 +906,122 @@ export interface components {
              * @default m4a
              * @enum {string}
              */
-            audio_format: "flac" | "wav" | "m4a" | "webm";
+            audio_format: "flac" | "wav" | "m4a" | "webm" | "ogg";
+        };
+        /**
+         * ConsentMethod
+         * @enum {string}
+         */
+        ConsentMethod: "in_app" | "verbal_attested_by_host";
+        /** ConsentNoticeResponse */
+        ConsentNoticeResponse: {
+            /** Version */
+            version: string;
+            /** Title */
+            title: string;
+            /** Paragraphs */
+            paragraphs: string[];
+        };
+        /** ConsentRequest */
+        ConsentRequest: {
+            /** Granted */
+            granted: boolean;
+        };
+        /** ConsentResponse */
+        ConsentResponse: {
+            /** Granted */
+            granted: boolean;
+            method: components["schemas"]["ConsentMethod"];
+            /**
+             * Granted At
+             * Format: date-time
+             */
+            granted_at: string;
+        };
+        /** CreateInviteRequest */
+        CreateInviteRequest: {
+            /** Email */
+            email: string;
+        };
+        /** CreateMeetingRequest */
+        CreateMeetingRequest: {
+            /** Title */
+            title: string;
+            /**
+             * Attendee User Ids
+             * @default []
+             */
+            attendee_user_ids: string[];
+            /**
+             * Guest Names
+             * @default []
+             */
+            guest_names: string[];
         };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             /** Name */
             name: string;
         };
+        /** DecisionResponse */
+        DecisionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Decision */
+            decision: string;
+            /** Decided By */
+            decided_by: string;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** DeleteAccountRequest */
+        DeleteAccountRequest: {
+            /** Password */
+            password?: string | null;
+            /** Google Id Token */
+            google_id_token?: string | null;
+        };
+        /**
+         * DeletionPreviewResponse
+         * @description What deleting the account would do, so the app can say it plainly before asking for a password.
+         */
+        DeletionPreviewResponse: {
+            /** Workspaces Deleted */
+            workspaces_deleted: components["schemas"]["OwnedWorkspaceResponse"][];
+            /** Workspaces Blocking */
+            workspaces_blocking: components["schemas"]["OwnedWorkspaceResponse"][];
+            /** Meetings Kept */
+            meetings_kept: number;
+            /** Can Delete */
+            can_delete: boolean;
+        };
+        /** DiagnosticsResponse */
+        DiagnosticsResponse: {
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number;
+            /** Sample Count */
+            sample_count: number;
+            /** Model Version */
+            model_version: string;
+            /** Per Passage Similarity */
+            per_passage_similarity: components["schemas"]["PerPassageSimilarity"][];
+            /** Cross Language Similarity En Ur */
+            cross_language_similarity_en_ur: number | null;
+        };
+        /**
+         * EmailStatus
+         * @enum {string}
+         */
+        EmailStatus: "sending" | "sent" | "failed";
         /**
          * EnrollmentLanguage
          * @description One value per enrollment passage — see docs/ENROLLMENT_PASSAGES.md.
@@ -315,6 +1042,11 @@ export interface components {
             /** Passages */
             passages: components["schemas"]["PassageStatus"][];
         };
+        /**
+         * FailedStep
+         * @enum {string}
+         */
+        FailedStep: "transcript" | "summary";
         /** GoogleSignInRequest */
         GoogleSignInRequest: {
             /** Id Token */
@@ -336,6 +1068,11 @@ export interface components {
         IdentifyRequest: {
             /** Audio Key */
             audio_key: string;
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
         };
         /** IdentifyResponse */
         IdentifyResponse: {
@@ -348,6 +1085,58 @@ export interface components {
             /** Skipped Voiceprints */
             skipped_voiceprints: components["schemas"]["SkippedVoiceprint"][];
         };
+        /**
+         * InvitePreviewResponse
+         * @description Shown to the invitee before they accept. Deliberately minimal: the token is the
+         *     only credential, so this reveals just enough to recognise the workspace.
+         */
+        InvitePreviewResponse: {
+            /** Workspace Name */
+            workspace_name: string;
+            /** Invited By Name */
+            invited_by_name: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /**
+         * InviteResponse
+         * @description What the owner sees in the pending-invites list. Never includes the token.
+         */
+        InviteResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** Email */
+            email: string;
+            /**
+             * Invited By User Id
+             * Format: uuid
+             */
+            invited_by_user_id: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            email_status: components["schemas"]["EmailStatus"];
+            /** Email Error */
+            email_error: string | null;
+        };
         /** JoinByCodeRequest */
         JoinByCodeRequest: {
             /** Code */
@@ -359,6 +1148,131 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MeetingDetailResponse */
+        MeetingDetailResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** Title */
+            title: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Host Name */
+            host_name: string;
+            /** Is Host */
+            is_host: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Attendees */
+            attendees: components["schemas"]["AttendeeResponse"][];
+            /** Warnings */
+            warnings: string[];
+            /** Consent Ready */
+            consent_ready: boolean;
+            /** Waiting For Consent */
+            waiting_for_consent: string[];
+            audio: components["schemas"]["AudioResponse"];
+            /** Transcript */
+            transcript: components["schemas"]["SegmentResponse"][];
+            summary: components["schemas"]["SummaryResponse"] | null;
+        };
+        /** MeetingListItem */
+        MeetingListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** Title */
+            title: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Host Name */
+            host_name: string;
+            /** Attendee Count */
+            attendee_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * MeetingStatus
+         * @enum {string}
+         */
+        MeetingStatus: "waiting_for_audio" | "processing" | "done" | "failed";
+        /**
+         * MeetingStatusResponse
+         * @description What the app polls. Small on purpose.
+         */
+        MeetingStatusResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            status: components["schemas"]["MeetingStatus"];
+            failed_step: components["schemas"]["FailedStep"] | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /** Audio Uploaded */
+            audio_uploaded: boolean;
+            /** Consent Ready */
+            consent_ready: boolean;
+            /** Transcript Ready */
+            transcript_ready: boolean;
+            /** Summary Ready */
+            summary_ready: boolean;
+        };
+        /** MeetingUploadUrlRequest */
+        MeetingUploadUrlRequest: {
+            audio_format: components["schemas"]["AudioFormat"];
+        };
+        /** MeetingUploadUrlResponse */
+        MeetingUploadUrlResponse: {
+            /** Upload Url */
+            upload_url: string;
+            /** Audio Key */
+            audio_key: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
+            /** Max Bytes */
+            max_bytes: number;
+            /** Max Duration Sec */
+            max_duration_sec: number;
+        };
+        /** OwnedWorkspaceResponse */
+        OwnedWorkspaceResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Member Count */
+            member_count: number;
         };
         /** PassageContent */
         PassageContent: {
@@ -393,10 +1307,61 @@ export interface components {
             /** Passages */
             passages: components["schemas"]["PassageContent"][];
         };
+        /** PerPassageSimilarity */
+        PerPassageSimilarity: {
+            /** Language */
+            language: string;
+            /** Similarity To Centroid */
+            similarity_to_centroid: number;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** RenameSpeakerRequest */
+        RenameSpeakerRequest: {
+            /** Attendee Id */
+            attendee_id?: string | null;
+            /** Guest Name */
+            guest_name?: string | null;
+        };
+        /** SampleMeasurement */
+        SampleMeasurement: {
+            /** Language */
+            language: string;
+            /** Accepted */
+            accepted: boolean;
+            /** Reason Code */
+            reason_code: string | null;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Speech Duration Sec */
+            speech_duration_sec: number;
+            /** Snr Db */
+            snr_db: number;
+        };
+        /** SegmentResponse */
+        SegmentResponse: {
+            /** Position */
+            position: number;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Text */
+            text: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "ur" | "en" | "mixed" | "unknown";
+            speaker: components["schemas"]["SpeakerRef"];
+        };
+        /** SetDoneRequest */
+        SetDoneRequest: {
+            /** Done */
+            done: boolean;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -420,6 +1385,22 @@ export interface components {
             model_version: string;
             /** Reason */
             reason: string;
+        };
+        /** SpeakerRef */
+        SpeakerRef: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "member" | "guest" | "former_member" | "unknown" | "unclear";
+            /** Name */
+            name: string;
+            /** User Id */
+            user_id: string | null;
+            /** Attendee Id */
+            attendee_id: string | null;
+            /** Unknown Number */
+            unknown_number: number | null;
         };
         /** SpeakerTurn */
         SpeakerTurn: {
@@ -462,6 +1443,166 @@ export interface components {
             reason_message: string | null;
             enrollment_status: components["schemas"]["EnrollmentStatus"];
         };
+        /** SummarizeRequest */
+        SummarizeRequest: {
+            /** Entries */
+            entries?: components["schemas"]["SummaryTurn"][] | null;
+            /** Audio Key */
+            audio_key?: string | null;
+            /** Transcription Engine */
+            transcription_engine?: ("groq" | "elevenlabs") | null;
+            /**
+             * Transcription Language
+             * @default auto
+             * @enum {string}
+             */
+            transcription_language: "auto" | "ur" | "en";
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
+            /** Summary Engine */
+            summary_engine?: ("groq" | "gemini") | null;
+        };
+        /** SummarizeResponse */
+        SummarizeResponse: {
+            /** Engine */
+            engine: string;
+            /** Model */
+            model: string;
+            /** Attempts */
+            attempts: number;
+            /** Parts */
+            parts: number;
+            /** Dropped Decisions */
+            dropped_decisions: number;
+            /** Dropped Action Items */
+            dropped_action_items: number;
+            transcript: components["schemas"]["TranscribeResponse"] | null;
+            /** Summary */
+            summary: components["schemas"]["SummarySentence"][];
+            /** Key Points */
+            key_points: components["schemas"]["SummarySentence"][];
+            /** Decisions */
+            decisions: components["schemas"]["SummaryDecision"][];
+            /** Action Items */
+            action_items: components["schemas"]["SummaryActionItem"][];
+        };
+        /** SummaryActionItem */
+        SummaryActionItem: {
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string | null;
+            /** Deadline */
+            deadline: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummaryDecision */
+        SummaryDecision: {
+            /** Decision */
+            decision: string;
+            /** Decided By */
+            decided_by: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummaryPointResponse */
+        SummaryPointResponse: {
+            /** Text */
+            text: string;
+            /** Citations */
+            citations: components["schemas"]["CitationResponse"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummaryResponse */
+        SummaryResponse: {
+            /** Engine */
+            engine: string;
+            /** Model */
+            model: string;
+            /** Parts */
+            parts: number;
+            /** Dropped Decisions */
+            dropped_decisions: number;
+            /** Dropped Action Items */
+            dropped_action_items: number;
+            /** Sentences */
+            sentences: components["schemas"]["SummaryPointResponse"][];
+            /** Key Points */
+            key_points: components["schemas"]["SummaryPointResponse"][];
+            /** Decisions */
+            decisions: components["schemas"]["DecisionResponse"][];
+            /** Action Items */
+            action_items: components["schemas"]["ActionItemResponse"][];
+        };
+        /** SummarySentence */
+        SummarySentence: {
+            /** Text */
+            text: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /**
+         * SummaryTurn
+         * @description One line of the transcript. A TranscriptEntry from /transcribe fits as-is: the fields
+         *     this does not list are ignored.
+         */
+        SummaryTurn: {
+            /** Speaker Label */
+            speaker_label: string;
+            /** Start */
+            start: number;
+            /** Text */
+            text: string;
+        };
+        /** TaskResponse */
+        TaskResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string;
+            /** Deadline Text */
+            deadline_text: string | null;
+            /** Done */
+            done: boolean;
+            /** Done At */
+            done_at: string | null;
+            /**
+             * Meeting Id
+             * Format: uuid
+             */
+            meeting_id: string;
+            /** Meeting Title */
+            meeting_title: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /** First Turn Number */
+            first_turn_number: number | null;
+            /** First Turn Start */
+            first_turn_start: number | null;
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -474,6 +1615,79 @@ export interface components {
              */
             token_type: string;
             user: components["schemas"]["UserResponse"];
+        };
+        /** TranscribeRequest */
+        TranscribeRequest: {
+            /** Audio Key */
+            audio_key: string;
+            /** Engine */
+            engine?: ("groq" | "elevenlabs") | null;
+            /**
+             * Language
+             * @default auto
+             * @enum {string}
+             */
+            language: "auto" | "ur" | "en";
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
+        };
+        /** TranscribeResponse */
+        TranscribeResponse: {
+            /** Engine */
+            engine: string;
+            /** Engine Language */
+            engine_language: string | null;
+            /** Script Warning */
+            script_warning: string | null;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Entries */
+            entries: components["schemas"]["TranscriptEntry"][];
+            /** Skipped Voiceprints */
+            skipped_voiceprints: components["schemas"]["SkippedVoiceprint"][];
+        };
+        /** TranscriptEntry */
+        TranscriptEntry: {
+            /** Speaker Label */
+            speaker_label: string;
+            /** User Id */
+            user_id: string | null;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Text */
+            text: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "ur" | "en" | "mixed" | "unknown";
+            /** Best Candidate Name */
+            best_candidate_name: string | null;
+            /** Best Score */
+            best_score: number | null;
+            /** Runner Up Name */
+            runner_up_name: string | null;
+            /** Runner Up Score */
+            runner_up_score: number | null;
+            /** Margin */
+            margin: number | null;
+            /** Pooled Seconds */
+            pooled_seconds: number;
+            /** Floor Applied */
+            floor_applied: number | null;
+        };
+        /** TransferOwnershipRequest */
+        TransferOwnershipRequest: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** UploadUrlRequest */
         UploadUrlRequest: {
@@ -526,6 +1740,31 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WorkspaceMemberResponse */
+        WorkspaceMemberResponse: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string | null;
+            role: components["schemas"]["WorkspaceRole"];
+            /** Can Create Projects */
+            can_create_projects: boolean;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /**
+             * Is Me
+             * @default false
+             */
+            is_me: boolean;
         };
         /** WorkspaceResponse */
         WorkspaceResponse: {
@@ -710,6 +1949,57 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deletion_preview_account_deletion_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionPreviewResponse"];
+                };
+            };
+        };
+    };
+    delete_account_account_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
             };
         };
         responses: {
@@ -941,6 +2231,138 @@ export interface operations {
             };
         };
     };
+    list_members_workspaces__workspace_id__members_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_member_role_workspaces__workspace_id__members__user_id__role_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_member_workspaces__workspace_id__members__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_ownership_workspaces__workspace_id__transfer_ownership_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferOwnershipRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_workspace_workspaces__workspace_id__get: {
         parameters: {
             query?: never;
@@ -1038,6 +2460,814 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transcribe_clip_workspaces__workspace_id__transcribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscribeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summarize_transcript_workspaces__workspace_id__summarize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SummarizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummarizeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invites_workspaces__workspace_id__invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invite_workspaces__workspace_id__invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_invite_workspaces__workspace_id__invites__invite_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_invite_workspaces__workspace_id__invites__invite_id__resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_invite_invites_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitePreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_invite_invites_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_meetings_workspaces__workspace_id__meetings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingListItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_meeting_workspaces__workspace_id__meetings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMeetingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consent_notice_meetings_consent_notice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentNoticeResponse"];
+                };
+            };
+        };
+    };
+    get_meeting_meetings__meeting_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_meeting_status_meetings__meeting_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_attendee_meetings__meeting_id__attendees_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddAttendeeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_attendee_meetings__meeting_id__attendees__attendee_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                attendee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_consent_meetings__meeting_id__attendees__attendee_id__consent_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                attendee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_audio_upload_meetings__meeting_id__audio_upload_url_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetingUploadUrlRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingUploadUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_audio_uploaded_meetings__meeting_id__audio_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_processing_meetings__meeting_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_speaker_meetings__meeting_id__speaker_renames__unknown_number__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                unknown_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameSpeakerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_rename_meetings__meeting_id__speaker_renames__unknown_number__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+                unknown_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tasks_me_action_items_get: {
+        parameters: {
+            query?: {
+                workspace_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_action_item_done_action_items__action_item_id__done_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDoneRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sample_measurements_dev_enroll_api_samples_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleMeasurement"][];
+                };
+            };
+        };
+    };
+    diagnostics_dev_enroll_api_diagnostics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiagnosticsResponse"];
+                };
+            };
+        };
+    };
+    admin_users_dev_enroll_api_admin_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRow"][];
                 };
             };
         };

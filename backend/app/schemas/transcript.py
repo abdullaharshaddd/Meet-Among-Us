@@ -3,12 +3,15 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.speaker_id import SkippedVoiceprint
+from app.schemas.speaker_id import ParticipantIds, SkippedVoiceprint
 
 
 class TranscribeRequest(BaseModel):
     audio_key: str
     engine: Literal["groq", "elevenlabs"] | None = None  # None means the ML service's default
+    # "auto" lets the engine detect the language. Name one only when the engine gets it wrong.
+    language: Literal["auto", "ur", "en"] = "auto"
+    participant_user_ids: list[UUID] | None = ParticipantIds
 
 
 class TranscriptEntry(BaseModel):
