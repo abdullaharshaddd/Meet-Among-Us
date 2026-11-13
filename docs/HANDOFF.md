@@ -1,4 +1,4 @@
-# HANDOFF — state of MeetAmongUs (updated 2026-11-08)
+# HANDOFF — state of MeetAmongUs (updated 2026-11-11)
 
 Work is split across two branches off `origin/main`: `feat/backend-speaker-id-transcription` (backend, ml, scripts, docs) and `feat/mobile-field-recorder-redesign` (mobile redesign and its design ADRs). Merge both; they do not overlap in files except `docs/`.
 
@@ -6,11 +6,9 @@ Read `CLAUDE.md` first for the working rules and locked decisions. This file rec
 
 ## Project
 Bilingual (English–Urdu) meeting intelligence for in-person, multi-speaker meetings. Final-year project, three developers.
-Milestone 1: signup → workspace → voice enrollment → project → meeting → recorded and uploaded audio.
-Transcription, diarization, summarization, RAG and agents are later milestones. Do not build or stub them.
-
-## Discrepancy to resolve
-`CLAUDE.md` says the database is **Neon**. The repo actually uses **Supabase Postgres**: `backend/.env.example` and ADR-0001 (transaction pooler for the app, direct connection for migrations). Either update CLAUDE.md or document a migration decision.
+FYP-1 scope: signup → workspace → voice enrollment → project → meeting → recorded and uploaded audio → speaker identification → transcription → summarization.
+RAG, the agent layer and fine-tuning come later. Do not build or stub them.
+Decided 2026-11-11: Phase 5 (projects, meetings) and the Android build are postponed until after transcription and summarization.
 
 ## Done
 
@@ -52,7 +50,7 @@ Mobile: login and signup screens, Google button (separate native and web files),
 - `scripts/speaker_separation_test.py` (audio-dir, from-db and selftest modes) exists. **No results have been recorded.** Whether ECAPA separates Urdu and cross-language speakers is still unvalidated.
 
 ### Phase 4c: speaker identification and transcription (backend + ml)
-Scope note: `CLAUDE.md` lists transcription and diarization as later milestones. This work was built ahead of that as a spike; decide whether to keep it on the milestone-1 path.
+In scope for FYP-1 (decided 2026-11-11).
 - Backend: `POST /workspaces/{id}/uploads` (clip upload URL), `POST /workspaces/{id}/identify` (label stretches of a clip by voiceprint, workspace members only, ADR-0020), `POST /workspaces/{id}/transcribe` (ADR-0023). `GET /enrollment/passages` serves the single copy of the enrollment passages.
 - ML service: `/transcribe` behind one `Transcriber` interface, Groq Whisper by default or ElevenLabs Scribe (needs `GROQ_API_KEY` / `ELEVENLABS_API_KEY` in `ml/.env`, see `ml/.env.example`). Segment splitting in `ml/ml/segments.py`.
 - Model version is read from the ML service rather than hard-coded (ADR-0021).
@@ -60,6 +58,20 @@ Scope note: `CLAUDE.md` lists transcription and diarization as later milestones.
 - Passages: `backend/app/content/enrollment_passages.json` is the one copy; mobile generates `enrollmentPassages.gen.ts` from it with `npm run generate:passages`.
 - Dev harness `/dev/transcribe` next to `/dev/enroll` (dev only).
 - Evidence and scripts: `docs/evaluation/` (segment length study, channel mismatch diagnosis) and `scripts/` (identify_clip, recompute_centroids, transcription_eval and others).
+
+### Phase 4d: summarization, prompted baseline (backend + ml, nothing saved, no schema change)
+- `POST /workspaces/{id}/summarize` takes `entries` (a transcript) or an `audio_key` (transcribed first). It returns a 1–8 sentence summary, key points, decisions (with who decided or proposed) and action items (owner, deadline). Each claim carries `citations` (turn number, start, speaker) and `warnings`. Broken model output is retried once, then fails with a 502.
+- ML service: `POST /summarize` and `ml/ml/summarizer.py`. One `ChatSummarizer` serves Groq (`openai/gpt-oss-120b`, default) and Gemini (`gemini-2.5-flash-lite`) through the OpenAI chat format. Set `GEMINI_API_KEY` and `SUMMARIZER` in `ml/.env`; model ids can be overridden there.
+- Dev page `/dev/transcribe`: a Summarizer select, and a "Summarize this transcript" button on each transcript card. Citation chips jump to the turn and seek the audio. `.ogg` uploads are now accepted (clip uploads only).
+- ADR-0025 (models and free limits), ADR-0026 (turn citations, hard and soft checks). Evaluation method in `docs/evaluation/summarization.md`. Nothing has been measured yet.
+- Groq's free tier (about 8K tokens/min) fits roughly 5–8 minutes of Urdu-English in one request. Longer transcripts return 413. Split-then-merge is not built.
+- Verified: 17 ML tests, 9 backend tests, and one real Groq call on a made-up transcript. **Not yet run:** Gemini (no key set), the full dev-page flow in a browser, or the `Recordings/` clips.
+- **2026-11-13, the `Recordings/` clips were run** (four `.ogg`, Groq only; results in `docs/evaluation/recordings_run/`):
+  - **Speaker ID failed** on them: 0 of 55 turns named. abdullah is the closest member every time but below the 0.72 floor; Vaniya is often closer to mubashra. Channel mismatch plus similar voices; nothing was retuned.
+  - **`participant_user_ids`** (optional) on `/identify`, `/transcribe`, `/summarize`: only those members are candidates, each id must be a workspace member (422 otherwise). With abdullah + Vaniya only, the closest candidate was right on 42 of 42 turns (was 32), but still 0 of 55 were named: no score reaches the floor. ADR-0020 notes meetings will pass their attendee list. The dev page has a member picker backed by a dev-only `GET /dev/transcribe/members`.
+  - **Language is now auto-detect** (ADR-0027), with an optional `language` (`auto`/`ur`/`en`) on `/transcribe` and `/summarize`. Auto retries as Urdu when Devanagari appears, because Whisper calls Urdu-English "Hindi".
+  - **Summaries are stricter** (ADR-0026 update): explicit decisions and action items only, quote must be in the cited turns or the item is dropped (counted in `dropped_decisions` / `dropped_action_items`), unnamed owners read "owner not identified" and unnamed `decided_by` reads "speaker not identified".
+  - Still not run: Gemini, the dev-page flow in a browser, the 20-minute Meet `.mp4`. The dev page does not show the dropped counts.
 
 ### Mobile redesign: Field Recorder (mobile only, no backend changes needed)
 - Design system (ADR-0024; light/dark ADR-0022): Paper and Studio themes, Instrument Serif / Instrument Sans / Geist Mono, one orange `signal` colour for recording only. Tokens in `mobile/src/theme/tokens.ts`. The legacy theme shim, old components and IBM Plex are removed.
@@ -85,7 +97,7 @@ ADRs 0001–0024 in `docs/adr/`. IBM Plex (0005) is superseded by the Field Reco
 - **Tests:** only `ml/tests` and backend tests were seen in earlier sessions. The state of the full suite was not rechecked here.
 
 ## Needs attention
-1. The Neon vs Supabase mismatch above.
+1. Database is Supabase Postgres (ADR-0001); `CLAUDE.md` now says so.
 2. Backend runs on port 8003 (`--port 8003`); `mobile/.env` points `EXPO_PUBLIC_API_URL` at it. Earlier ports 8001/8002 are retired.
 3. **EAS rebuild needed:** the redesign adds `expo-haptics`, `expo-clipboard` and `expo-linear-gradient`. Then test on an Android device: bidi/RTL isolates, Nastaliq clipping, haptics, keyboard behaviour, tab-bar hiding, swipe directions, Stop ring animation, Material icons.
 4. `mobile/src/api/types.gen.ts` was regenerated from the backend branch, so it lists `/enrollment/passages`, `/identify`, `/transcribe` and clip uploads. Merge the backend branch first, or regenerate (`npm run generate:types`) after merging.
@@ -93,7 +105,7 @@ ADRs 0001–0024 in `docs/adr/`. IBM Plex (0005) is superseded by the Field Reco
 6. `GLOSSARY.md` is required for each new term. New terms from 4c were added; recheck after Phase 5.
 
 ## Suggested next step
-Phase 5: projects and meetings (migration, models, repositories, services, routers, mobile screens). Per CLAUDE.md, write a plan and wait for approval first. Stop at the phase boundary.
+Decide what to do about speaker identification on these clips (record enrollments and clips on the same channel, or revisit the floor with data, see `docs/evaluation/recordings_run/`). Then run Gemini once a `GEMINI_API_KEY` is set, and start the evaluation in `docs/evaluation/summarization.md`. Phase 5 (projects and meetings) and the Android build are postponed until after FYP-1's transcription and summarization work. Per CLAUDE.md, write a plan and wait for approval before each new phase.
 
 ## Run it
 ```bash
