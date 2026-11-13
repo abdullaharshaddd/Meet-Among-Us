@@ -186,12 +186,12 @@ def _build_message(
     link is the second option, and the personal invite code (which also works in the same box) the third. A link
     is not relied on, since a custom-scheme link does not open in most mail apps, and a localhost link only works
     on the developer's own computer."""
-    how_to = 'Open the Meet Among Us app, go to Workspaces, choose "Join a workspace" and enter'
+    how_to = 'Open the Meet Among Us app, go to Workspaces, choose "Join with a code" and enter'
     lines = [f'{inviter_name} invited you to join the workspace "{workspace_name}" on Meet Among Us.', ""]
 
     if join_code:
         lines += [f"{how_to} this join code:", "", f"    {join_code}", "", "Other ways to join:"]
-        lines += [f"- Your personal invite code, which also works in that box: {token}"]
+        lines += [f"- Your personal invite code, for the personal invite code field on the same screen: {token}"]
     else:
         lines += [f"{how_to} this invite code:", "", f"    {token}", "", "Other ways to join:"]
 

@@ -48,6 +48,8 @@ class AttendeeResponse(BaseModel):
     name: str
     user_id: UUID | None
     is_host: bool
+    # True for the person asking, so the app knows which row is theirs without relying on its own login state.
+    is_me: bool
     # Members only: has this person finished voice enrollment. Null for guests and former members.
     enrolled: bool | None
     consent: ConsentResponse | None

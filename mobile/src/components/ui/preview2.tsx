@@ -1,8 +1,7 @@
 // Second half of the dev preview: navigation, recording and row components.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { layout, space } from "@/theme/tokens";
-import { segments } from "@/mocks/transcript";
 import { AudioLevelMeter } from "./AudioLevelMeter";
 import { ActionConfirmCard } from "./ActionConfirmCard";
 import { BottomSheet } from "./BottomSheet";
@@ -21,7 +20,6 @@ import { TaskRow } from "./TaskRow";
 import { Text } from "./Text";
 import { useToast } from "./Toast";
 import { TranscriptRow } from "./TranscriptRow";
-import { useMockLevel } from "@/mocks/live";
 
 function ControlsPreview() {
   const [tab, setTab] = useState("summary");
@@ -79,7 +77,7 @@ function RecordingPreview() {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [ended, setEnded] = useState(0);
-  const level = useMockLevel(isRecording && !isPaused);
+  const level = useDemoLevel(isRecording && !isPaused);
 
   return (
     <Section title="Recording" note="Meter, record button, and the hold-to-end stop button. Hold the stop button for 600 ms.">
@@ -109,7 +107,7 @@ function RowsPreview() {
         title="Sprint sync"
         whenLabel="Tue 4 Nov · 14:00"
         durationLabel="48 min"
-        projectName="Spring launch"
+        subtitle="Spring launch"
         people={[
           { id: "user-ayesha", name: "Ayesha Siddiqui" },
           { id: "user-bilal", name: "Bilal Hussain" },
@@ -182,4 +180,34 @@ export function MorePreviews() {
       <RowsPreview />
     </>
   );
+}
+
+// Sample lines and a wobbling level, only for this developer-only component gallery. Nothing here reaches a user.
+const segments = [
+  { id: "d1", startSeconds: 4, speaker: { kind: "member" as const, id: "demo-a", name: "Sample speaker A" }, text: "A sample line in English.", language: "en" as const },
+  { id: "d2", startSeconds: 12, speaker: { kind: "member" as const, id: "demo-b", name: "Sample speaker B" }, text: "اردو میں ایک نمونہ جملہ۔", language: "ur" as const },
+  { id: "d3", startSeconds: 20, speaker: { kind: "unknown" as const, id: "demo-u", number: 1 }, text: "Aik sample line, mixed with English.", language: "mixed" as const },
+  { id: "d4", startSeconds: 31, speaker: { kind: "guest" as const, id: "demo-g", name: "Sample guest" }, text: "Another sample line.", language: "en" as const },
+];
+
+function useDemoLevel(isRunning: boolean): number {
+  const [level, setLevel] = useState(0);
+
+  useEffect(() => {
+    if (!isRunning) {
+      setLevel(0);
+
+      return;
+    }
+
+    let tick = 0;
+    const timer = setInterval(() => {
+      tick += 1;
+      setLevel(Math.min(1, Math.max(0, (Math.sin(tick / 9) + 1) / 2)));
+    }, 80);
+
+    return () => clearInterval(timer);
+  }, [isRunning]);
+
+  return level;
 }

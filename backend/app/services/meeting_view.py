@@ -257,6 +257,7 @@ def build_detail(db: Session, meeting: Meeting, viewer_id: UUID) -> MeetingDetai
                 name=user.display_name if user is not None else (attendee.guest_name or FORMER_MEMBER),
                 user_id=attendee.user_id,
                 is_host=attendee.user_id is not None and attendee.user_id == meeting.host_user_id,
+                is_me=attendee.user_id is not None and attendee.user_id == viewer_id,
                 enrolled=enrolled,
                 consent=ConsentResponse(granted=record.granted, method=record.method, granted_at=record.granted_at)
                 if record

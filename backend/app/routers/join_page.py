@@ -35,7 +35,7 @@ def invite_landing_page(token: str, db: Session = Depends(get_db)) -> HTMLRespon
     body = (
         f"<h1>Join {html.escape(preview.workspace_name)}</h1>"
         f"<p>{html.escape(preview.invited_by_name)} invited you. Open the Meet Among Us app, go to Workspaces, "
-        'choose "Join a workspace" and paste this invite code:</p>'
+        'choose "Join with a code" and paste this invite code:</p>'
         f"<code>{html.escape(token)}</code>"
         f"<p>The invite expires on {preview.expires_at:%Y-%m-%d}.</p>"
     )

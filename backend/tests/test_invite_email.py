@@ -24,14 +24,14 @@ def test_the_email_leads_with_the_join_code_and_how_to_enter_it(monkeypatch: pyt
     body = build("K7M2-9XQZ", "http://localhost:8003", monkeypatch)
 
     assert body.index("K7M2-9XQZ") < body.index(TOKEN)
-    assert 'choose "Join a workspace"' in body
+    assert 'choose "Join with a code"' in body
     assert "Workspaces" in body
 
 
 def test_the_invite_code_and_link_are_secondary_options(monkeypatch: pytest.MonkeyPatch) -> None:
     body = build("K7M2-9XQZ", "http://localhost:8003", monkeypatch)
 
-    assert f"Your personal invite code, which also works in that box: {TOKEN}" in body
+    assert f"Your personal invite code, for the personal invite code field on the same screen: {TOKEN}" in body
     assert f"http://localhost:8003/join/{TOKEN}" in body
     assert body.index("K7M2-9XQZ") < body.index("This link")
 

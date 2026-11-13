@@ -79,6 +79,7 @@ def list_members(db: Session, user: User, workspace_id: UUID) -> list[WorkspaceM
             role=member.role,
             can_create_projects=permissions.can_create_projects(member),
             joined_at=member.joined_at,
+            is_me=member.user_id == user.id,
         )
         for member, member_user in workspace_member_repository.list_with_users(db, workspace_id)
     ]
@@ -117,6 +118,7 @@ def _member_response(workspace_id: UUID, db: Session, viewer: WorkspaceMember, t
                 role=member.role,
                 can_create_projects=permissions.can_create_projects(member),
                 joined_at=member.joined_at,
+                is_me=member.user_id == viewer.user_id,
             )
 
     raise MemberNotFoundError("That person is not a member of this workspace.")

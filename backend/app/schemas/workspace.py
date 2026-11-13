@@ -35,6 +35,8 @@ class WorkspaceMemberResponse(BaseModel):
     role: WorkspaceRole
     can_create_projects: bool
     joined_at: datetime
+    # True for the person asking, so the app can offer Leave on their own row instead of Remove.
+    is_me: bool = False
 
 
 class ChangeRoleRequest(BaseModel):
