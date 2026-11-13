@@ -57,9 +57,19 @@ export default function ConsentScreen() {
             <Text variant="callout" tone="secondary">
               A guest has no account, so you answer for them. Only tick a name once that person has told you they agree.
             </Text>
-            {guests.map((guest) => (
-              <Checkbox key={guest.id} label={`${guest.name} agrees to be recorded`} checked={guest.consent?.granted === true} onChange={(checked) => answer(guest.id, checked)} />
-            ))}
+            {guests.map((guest) => {
+              const agreed = guest.consent?.granted === true;
+
+              // The Checkbox draws only the box, so the sentence sits beside it and tapping it toggles too.
+              return (
+                <View key={guest.id} style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
+                  <Checkbox label={`${guest.name} agrees to be recorded`} checked={agreed} onChange={(checked) => answer(guest.id, checked)} />
+                  <Text variant="body" style={{ flex: 1 }} onPress={() => answer(guest.id, !agreed)}>
+                    {`${guest.name} agrees to be recorded`}
+                  </Text>
+                </View>
+              );
+            })}
           </Card>
         )}
 

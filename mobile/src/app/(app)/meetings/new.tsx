@@ -56,14 +56,20 @@ export default function NewMeetingScreen() {
             <Text variant="bodyStrong">You (host)</Text>
           </Card>
           {isLoading && <Text variant="callout" tone="secondary">Loading your team…</Text>}
-          {others.map((member) => (
-            <Checkbox
-              key={member.user_id}
-              label={member.display_name}
-              checked={picked.includes(member.user_id)}
-              onChange={(checked) => setPicked(checked ? [...picked, member.user_id] : picked.filter((id) => id !== member.user_id))}
-            />
-          ))}
+          {others.map((member) => {
+            const toggle = (checked: boolean) => setPicked(checked ? [...picked, member.user_id] : picked.filter((id) => id !== member.user_id));
+            const isPicked = picked.includes(member.user_id);
+
+            // The Checkbox draws only the box, so the name sits beside it and tapping the name toggles too.
+            return (
+              <View key={member.user_id} style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
+                <Checkbox label={member.display_name} checked={isPicked} onChange={toggle} />
+                <Text variant="body" onPress={() => toggle(!isPicked)}>
+                  {member.display_name}
+                </Text>
+              </View>
+            );
+          })}
           {!isLoading && others.length === 0 && (
             <Text variant="callout" tone="secondary">
               Nobody else is in this workspace yet. You can invite people from Settings, or add a guest below.
