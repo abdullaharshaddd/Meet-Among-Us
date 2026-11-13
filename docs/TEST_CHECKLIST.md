@@ -69,8 +69,8 @@ Verified: Tests. Not checked in a browser (the test run created the workspace th
 the join code and the steps, with the link second. While `INVITE_LINK_BASE_URL` is `http://localhost:8003`, the link
 only opens on the host computer, and the email says so.
 
-Verified: Tests (invites, members, the email wording). Not checked: the Invite and Join screens, the `/join/{token}`
-landing page, and a real email arriving (see below).
+Verified: Tests (invites, members, the email wording). A real invite email arrived in an inbox (see "Real invite email"
+below). Not checked: the Invite and Join screens and the `/join/{token}` landing page.
 
 ## 4. Enroll your voice
 Each person: "Start enrollment", read the three passages.
@@ -172,9 +172,10 @@ for accounts that signed up with Google.
 ---
 
 ## Real invite email
-Not yet sent. Set up and ready: all seven SMTP and invite variables are filled in `backend/.env`. To try it, send an
-invite from the Invite screen to an address you control, then check the inbox and the spam folder, and tell the team
-whether it arrived and where it landed.
+**Verified 2026-11-13:** one real invite was sent through the Gmail SMTP settings in `backend/.env` and arrived in the
+inbox (not spam). It was sent from a throwaway inviter and workspace, so the Invite screen and the join steps after
+the email are still unchecked. To try it again, send an invite from the Invite screen to an address you control and
+check the inbox and the spam folder.
 
 ## Clean up
 - Ctrl+C each of the three terminals.

@@ -105,6 +105,7 @@ ADRs 0001–0031 in `docs/adr/`. IBM Plex (0005) is superseded by the Field Reco
 - **Assistant tab** (RAG and the agent layer are later).
 - **EAS development build:** check that `eas.json` produces a working APK on a real device.
 - **Seed script:** `scripts/seed_demo.py` is referenced in CLAUDE.md but does not exist.
+- **Real invite email: verified 2026-11-13.** One invite sent through the Gmail SMTP settings arrived in an inbox (not spam).
 - **Never run:** Gemini (no key set), the 20-minute Meet `.mp4`, the invite landing page and Google re-authentication in a browser or on a device.
 
 ## Needs attention
