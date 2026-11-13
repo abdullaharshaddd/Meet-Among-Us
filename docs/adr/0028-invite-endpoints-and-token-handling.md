@@ -1,4 +1,4 @@
-# 0020 — Invite endpoint shape and token handling
+# 0028 — Invite endpoint shape and token handling
 
 ## Context
 
