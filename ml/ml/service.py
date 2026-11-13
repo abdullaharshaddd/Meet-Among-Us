@@ -58,6 +58,29 @@ class SegmentsResponse(BaseModel):
     segments: list[SegmentResponse]
 
 
+# Bump when the backend starts to rely on something new. The backend compares this at startup and warns
+# when the ML service it talks to is older than it needs.
+API_VERSION = 2
+CAPABILITIES = ["transcribe_language_auto", "summarize_unnamed_label", "duration"]
+
+
+@app.get("/version")
+def version() -> dict:
+    return {"api_version": API_VERSION, "capabilities": CAPABILITIES}
+
+
+class DurationResponse(BaseModel):
+    duration_sec: float
+
+
+@app.post("/duration", response_model=DurationResponse)
+async def duration(request: Request) -> DurationResponse:
+    """Only decodes the audio. Lets the backend refuse a too-long recording before paying for transcription."""
+    samples, sample_rate = audio.decode(await request.body())
+
+    return DurationResponse(duration_sec=samples.shape[0] / sample_rate)
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}

@@ -85,6 +85,9 @@ class Decision(BaseModel):
     turns: list[int] = Field(min_length=1)
     quote: str
     warnings: list[str] = []
+    # Set when decided_by was an unnamed voice ("Unknown Speaker 2"). decided_by then reads "speaker not
+    # identified", and this keeps which voice it was, so a later rename can still find it.
+    unnamed_label: str | None = None
 
 
 class ActionItem(BaseModel):
@@ -94,6 +97,7 @@ class ActionItem(BaseModel):
     turns: list[int] = Field(min_length=1)
     quote: str
     warnings: list[str] = []
+    unnamed_label: str | None = None  # as for Decision, for owner
 
 
 class SummaryOutput(BaseModel):
@@ -319,6 +323,7 @@ def finalize(output: SummaryOutput, turns: list[Turn]) -> tuple[int, int]:
 
     for decision in output.decisions:
         if decision.decided_by and UNNAMED_SPEAKER.fullmatch(normalize(decision.decided_by)):
+            decision.unnamed_label = decision.decided_by
             decision.decided_by = SPEAKER_NOT_IDENTIFIED
             decision.warnings = [w for w in decision.warnings if not w.startswith("decided_by")]
 
@@ -328,6 +333,7 @@ def finalize(output: SummaryOutput, turns: list[Turn]) -> tuple[int, int]:
             action.warnings = [w if w != DEADLINE_MISSING else "The deadline was removed: it is not in the cited turns." for w in action.warnings]
 
         if action.owner and UNNAMED_SPEAKER.fullmatch(normalize(action.owner)):
+            action.unnamed_label = action.owner
             action.owner = OWNER_NOT_IDENTIFIED
             action.warnings = [w for w in action.warnings if not w.startswith("owner")]
 

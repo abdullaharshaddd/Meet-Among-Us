@@ -311,3 +311,22 @@ def test_a_named_decided_by_is_left_alone() -> None:
     summarizer.finalize(output, TURNS)
 
     assert output.decisions[0].decided_by == "Abdullah"
+
+
+def test_an_unnamed_voice_keeps_its_label_in_unnamed_label() -> None:
+    reply = good_reply()
+    reply["action_items"][0]["owner"] = "Unknown Speaker 2"
+    reply["decisions"][0]["decided_by"] = "Unclear"
+    output = summarizer.read_reply(json.dumps(reply), TURNS)
+    summarizer.finalize(output, TURNS)
+
+    assert output.action_items[0].owner == "owner not identified"
+    assert output.action_items[0].unnamed_label == "Unknown Speaker 2"
+    assert output.decisions[0].unnamed_label == "Unclear"
+
+
+def test_a_named_owner_has_no_unnamed_label() -> None:
+    output = summarizer.read_reply(json.dumps(good_reply()), TURNS)
+    summarizer.finalize(output, TURNS)
+
+    assert output.action_items[0].unnamed_label is None
