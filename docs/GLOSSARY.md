@@ -152,3 +152,5 @@ Plain-English definitions, added the first time each term is used in code.
 - **Tokens per minute (TPM)** — the cap on how much text a free API account may send and receive each minute, counted in small pieces of words called tokens.
 - **ROUGE** — a score for how many words and short word-runs a written summary shares with a human-written one.
 - **BERTScore** — a score for how close in meaning a written summary is to a human-written one, judged by a language model instead of by exact words.
+- **Invite token** — a long random string in the emailed invite; whoever holds it and is signed in can accept that one invite.
+- **Row lock** — a database promise that only one request at a time may change a given row, used so two people cannot accept the same invite at once.

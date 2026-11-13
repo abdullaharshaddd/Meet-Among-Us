@@ -54,8 +54,10 @@ def db() -> Session:
     # voiceprints/enrollment_samples use pgvector's `vector` column type —
     # create_all fails against a fresh test DB without this. IF NOT EXISTS
     # makes re-running it every test cheap and harmless.
+    # users.email and invites.email are CITEXT, which needs the same treatment.
     with _engine.begin() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
     Base.metadata.create_all(_engine)
     connection = _engine.connect()
     transaction = connection.begin()

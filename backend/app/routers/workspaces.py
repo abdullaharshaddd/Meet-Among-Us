@@ -10,7 +10,12 @@ from app.schemas.enrollment import UploadUrlResponse
 from app.schemas.speaker_id import ClipUploadRequest, IdentifyRequest, IdentifyResponse
 from app.schemas.summary import SummarizeRequest, SummarizeResponse
 from app.schemas.transcript import TranscribeRequest, TranscribeResponse
-from app.schemas.workspace import CreateWorkspaceRequest, JoinByCodeRequest, WorkspaceResponse
+from app.schemas.workspace import (
+    CreateWorkspaceRequest,
+    JoinByCodeRequest,
+    WorkspaceMemberResponse,
+    WorkspaceResponse,
+)
 from app.services import speaker_id_service, summary_service, transcript_service, workspace_service
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -35,6 +40,13 @@ def join_by_code(
     payload: JoinByCodeRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> WorkspaceResponse:
     return workspace_service.join_by_code(db, user, payload.code)
+
+
+@router.get("/{workspace_id}/members", response_model=list[WorkspaceMemberResponse])
+def list_members(
+    workspace_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> list[WorkspaceMemberResponse]:
+    return workspace_service.list_members(db, user, workspace_id)
 
 
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)
