@@ -260,6 +260,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces/{workspace_id}/transcribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transcribe Clip */
+        post: operations["transcribe_clip_workspaces__workspace_id__transcribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/summarize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Summarize Transcript */
+        post: operations["summarize_transcript_workspaces__workspace_id__summarize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sample Measurements */
+        get: operations["sample_measurements_dev_enroll_api_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Diagnostics */
+        get: operations["diagnostics_dev_enroll_api_diagnostics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dev/enroll/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Users */
+        get: operations["admin_users_dev_enroll_api_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -281,6 +366,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminUserRow */
+        AdminUserRow: {
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name: string;
+            /** Enrollment Status */
+            enrollment_status: string;
+            /** Accepted Sample Count */
+            accepted_sample_count: number;
+            /** Total Sample Count */
+            total_sample_count: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number | null;
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number | null;
+        };
+        /**
+         * Citation
+         * @description A transcript turn that backs a claim, so the claim can be checked.
+         */
+        Citation: {
+            /** Turn Number */
+            turn_number: number;
+            /** Start */
+            start: number;
+            /** Speaker Label */
+            speaker_label: string;
+        };
         /** ClipUploadRequest */
         ClipUploadRequest: {
             /**
@@ -288,12 +402,27 @@ export interface components {
              * @default m4a
              * @enum {string}
              */
-            audio_format: "flac" | "wav" | "m4a" | "webm";
+            audio_format: "flac" | "wav" | "m4a" | "webm" | "ogg";
         };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             /** Name */
             name: string;
+        };
+        /** DiagnosticsResponse */
+        DiagnosticsResponse: {
+            /** Centroid L2 Norm */
+            centroid_l2_norm: number;
+            /** Intra Speaker Variance */
+            intra_speaker_variance: number;
+            /** Sample Count */
+            sample_count: number;
+            /** Model Version */
+            model_version: string;
+            /** Per Passage Similarity */
+            per_passage_similarity: components["schemas"]["PerPassageSimilarity"][];
+            /** Cross Language Similarity En Ur */
+            cross_language_similarity_en_ur: number | null;
         };
         /**
          * EnrollmentLanguage
@@ -336,6 +465,11 @@ export interface components {
         IdentifyRequest: {
             /** Audio Key */
             audio_key: string;
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
         };
         /** IdentifyResponse */
         IdentifyResponse: {
@@ -393,10 +527,32 @@ export interface components {
             /** Passages */
             passages: components["schemas"]["PassageContent"][];
         };
+        /** PerPassageSimilarity */
+        PerPassageSimilarity: {
+            /** Language */
+            language: string;
+            /** Similarity To Centroid */
+            similarity_to_centroid: number;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** SampleMeasurement */
+        SampleMeasurement: {
+            /** Language */
+            language: string;
+            /** Accepted */
+            accepted: boolean;
+            /** Reason Code */
+            reason_code: string | null;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Speech Duration Sec */
+            speech_duration_sec: number;
+            /** Snr Db */
+            snr_db: number;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -462,6 +618,100 @@ export interface components {
             reason_message: string | null;
             enrollment_status: components["schemas"]["EnrollmentStatus"];
         };
+        /** SummarizeRequest */
+        SummarizeRequest: {
+            /** Entries */
+            entries?: components["schemas"]["SummaryTurn"][] | null;
+            /** Audio Key */
+            audio_key?: string | null;
+            /** Transcription Engine */
+            transcription_engine?: ("groq" | "elevenlabs") | null;
+            /**
+             * Transcription Language
+             * @default auto
+             * @enum {string}
+             */
+            transcription_language: "auto" | "ur" | "en";
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
+            /** Summary Engine */
+            summary_engine?: ("groq" | "gemini") | null;
+        };
+        /** SummarizeResponse */
+        SummarizeResponse: {
+            /** Engine */
+            engine: string;
+            /** Model */
+            model: string;
+            /** Attempts */
+            attempts: number;
+            /** Dropped Decisions */
+            dropped_decisions: number;
+            /** Dropped Action Items */
+            dropped_action_items: number;
+            transcript: components["schemas"]["TranscribeResponse"] | null;
+            /** Summary */
+            summary: components["schemas"]["SummarySentence"][];
+            /** Key Points */
+            key_points: components["schemas"]["SummarySentence"][];
+            /** Decisions */
+            decisions: components["schemas"]["SummaryDecision"][];
+            /** Action Items */
+            action_items: components["schemas"]["SummaryActionItem"][];
+        };
+        /** SummaryActionItem */
+        SummaryActionItem: {
+            /** Task */
+            task: string;
+            /** Owner */
+            owner: string | null;
+            /** Deadline */
+            deadline: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummaryDecision */
+        SummaryDecision: {
+            /** Decision */
+            decision: string;
+            /** Decided By */
+            decided_by: string | null;
+            /** Quote */
+            quote: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** SummarySentence */
+        SummarySentence: {
+            /** Text */
+            text: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /**
+         * SummaryTurn
+         * @description One line of the transcript. A TranscriptEntry from /transcribe fits as-is: the fields
+         *     this does not list are ignored.
+         */
+        SummaryTurn: {
+            /** Speaker Label */
+            speaker_label: string;
+            /** Start */
+            start: number;
+            /** Text */
+            text: string;
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -474,6 +724,71 @@ export interface components {
              */
             token_type: string;
             user: components["schemas"]["UserResponse"];
+        };
+        /** TranscribeRequest */
+        TranscribeRequest: {
+            /** Audio Key */
+            audio_key: string;
+            /** Engine */
+            engine?: ("groq" | "elevenlabs") | null;
+            /**
+             * Language
+             * @default auto
+             * @enum {string}
+             */
+            language: "auto" | "ur" | "en";
+            /**
+             * Participant User Ids
+             * @description Only these workspace members can be matched. Omit it to match every enrolled member.
+             */
+            participant_user_ids?: string[] | null;
+        };
+        /** TranscribeResponse */
+        TranscribeResponse: {
+            /** Engine */
+            engine: string;
+            /** Engine Language */
+            engine_language: string | null;
+            /** Script Warning */
+            script_warning: string | null;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Entries */
+            entries: components["schemas"]["TranscriptEntry"][];
+            /** Skipped Voiceprints */
+            skipped_voiceprints: components["schemas"]["SkippedVoiceprint"][];
+        };
+        /** TranscriptEntry */
+        TranscriptEntry: {
+            /** Speaker Label */
+            speaker_label: string;
+            /** User Id */
+            user_id: string | null;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Text */
+            text: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "ur" | "en" | "mixed" | "unknown";
+            /** Best Candidate Name */
+            best_candidate_name: string | null;
+            /** Best Score */
+            best_score: number | null;
+            /** Runner Up Name */
+            runner_up_name: string | null;
+            /** Runner Up Score */
+            runner_up_score: number | null;
+            /** Margin */
+            margin: number | null;
+            /** Pooled Seconds */
+            pooled_seconds: number;
+            /** Floor Applied */
+            floor_applied: number | null;
         };
         /** UploadUrlRequest */
         UploadUrlRequest: {
@@ -1038,6 +1353,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transcribe_clip_workspaces__workspace_id__transcribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscribeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summarize_transcript_workspaces__workspace_id__summarize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SummarizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummarizeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sample_measurements_dev_enroll_api_samples_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleMeasurement"][];
+                };
+            };
+        };
+    };
+    diagnostics_dev_enroll_api_diagnostics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiagnosticsResponse"];
+                };
+            };
+        };
+    };
+    admin_users_dev_enroll_api_admin_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRow"][];
                 };
             };
         };

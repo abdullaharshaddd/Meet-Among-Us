@@ -8,9 +8,10 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.enrollment import UploadUrlResponse
 from app.schemas.speaker_id import ClipUploadRequest, IdentifyRequest, IdentifyResponse
+from app.schemas.summary import SummarizeRequest, SummarizeResponse
 from app.schemas.transcript import TranscribeRequest, TranscribeResponse
 from app.schemas.workspace import CreateWorkspaceRequest, JoinByCodeRequest, WorkspaceResponse
-from app.services import speaker_id_service, transcript_service, workspace_service
+from app.services import speaker_id_service, summary_service, transcript_service, workspace_service
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
@@ -60,7 +61,7 @@ def identify_speakers(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> IdentifyResponse:
-    return speaker_id_service.identify(db, user, workspace_id, payload.audio_key)
+    return speaker_id_service.identify(db, user, workspace_id, payload.audio_key, payload.participant_user_ids)
 
 
 @router.post("/{workspace_id}/transcribe", response_model=TranscribeResponse)
@@ -70,4 +71,16 @@ def transcribe_clip(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> TranscribeResponse:
-    return transcript_service.transcribe(db, user, workspace_id, payload.audio_key, payload.engine)
+    return transcript_service.transcribe(
+        db, user, workspace_id, payload.audio_key, payload.engine, payload.language, payload.participant_user_ids
+    )
+
+
+@router.post("/{workspace_id}/summarize", response_model=SummarizeResponse)
+def summarize_transcript(
+    workspace_id: UUID,
+    payload: SummarizeRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> SummarizeResponse:
+    return summary_service.summarize(db, user, workspace_id, payload)

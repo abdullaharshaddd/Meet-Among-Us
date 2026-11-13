@@ -1,15 +1,32 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ClipUploadRequest(BaseModel):
-    audio_format: Literal["flac", "wav", "m4a", "webm"] = "m4a"
+    audio_format: Literal["flac", "wav", "m4a", "webm", "ogg"] = "m4a"
+
+
+# Shared by /identify, /transcribe and /summarize. Meetings will send their attendee list here.
+ParticipantIds = Field(
+    default=None,
+    min_length=1,
+    description="Only these workspace members can be matched. Omit it to match every enrolled member.",
+)
 
 
 class IdentifyRequest(BaseModel):
     audio_key: str
+    participant_user_ids: list[UUID] | None = ParticipantIds
+
+
+class ParticipantChoice(BaseModel):
+    """One workspace member, for the dev page's participant picker."""
+
+    user_id: UUID
+    display_name: str
+    enrollment_status: str
 
 
 class SpeakerTurn(BaseModel):

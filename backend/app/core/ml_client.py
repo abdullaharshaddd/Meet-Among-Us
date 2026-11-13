@@ -8,10 +8,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import requests
+from pydantic import BaseModel
 
 from app.core.config import SpeakerIdSettings, settings
 from app.core.exceptions import (
     MLServiceUnavailableError,
+    SummaryFailedError,
+    SummaryRateLimitedError,
+    SummaryTooLongError,
+    SummaryUnavailableError,
     TranscriptionFailedError,
     TranscriptionRateLimitedError,
     TranscriptionUnavailableError,
@@ -111,7 +116,7 @@ class TranscriptResult:
     duration_sec: float
 
 
-def transcribe(audio_bytes: bytes, engine: str | None, language: str = "ur") -> TranscriptResult:
+def transcribe(audio_bytes: bytes, engine: str | None, language: str = "auto") -> TranscriptResult:
     params = {"language": language}
 
     if engine:
@@ -156,3 +161,71 @@ def _error_detail(response: requests.Response) -> str:
         return str(response.json()["detail"])
     except (ValueError, KeyError, TypeError):
         return f"Transcription service returned {response.status_code}."
+
+
+class MLPoint(BaseModel):
+    text: str
+    turns: list[int]
+    warnings: list[str]
+
+
+class MLDecision(BaseModel):
+    decision: str
+    decided_by: str | None
+    turns: list[int]
+    quote: str
+    warnings: list[str]
+
+
+class MLActionItem(BaseModel):
+    task: str
+    owner: str | None
+    deadline: str | None
+    turns: list[int]
+    quote: str
+    warnings: list[str]
+
+
+class MLSummary(BaseModel):
+    """Mirrors ml/ml/service.py's SummarizeResponse. Cites turns by number; the summary
+    service turns those into timestamps and speakers."""
+
+    engine: str
+    model: str
+    attempts: int
+    dropped_decisions: int
+    dropped_action_items: int
+    summary: list[MLPoint]
+    key_points: list[MLPoint]
+    decisions: list[MLDecision]
+    action_items: list[MLActionItem]
+
+
+def summarize(turns: list[dict], engine: str | None) -> MLSummary:
+    params = {"engine": engine} if engine else {}
+
+    try:
+        response = requests.post(
+            f"{settings.ml_service_url}/summarize",
+            params=params,
+            json={"turns": turns},
+            timeout=300,  # up to two model calls, each of which may wait out a rate limit
+        )
+    except requests.RequestException as exc:
+        raise MLServiceUnavailableError(f"Summary service unreachable: {exc}") from exc
+
+    if not response.ok:
+        detail = _error_detail(response)
+
+        if response.status_code == 429:
+            raise SummaryRateLimitedError(detail)
+
+        if response.status_code == 503:
+            raise SummaryUnavailableError(detail)
+
+        if response.status_code == 413:
+            raise SummaryTooLongError(detail)
+
+        raise SummaryFailedError(detail)
+
+    return MLSummary.model_validate(response.json())

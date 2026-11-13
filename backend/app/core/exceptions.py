@@ -73,6 +73,12 @@ class CodeJoiningDisabledError(AppError):
     status_code = 403
 
 
+class ParticipantNotInWorkspaceError(AppError):
+    """participant_user_ids named someone who is not a member of the workspace."""
+
+    status_code = 422
+
+
 class ClipNotInWorkspaceError(AppError):
     """audio_key wasn't uploaded through this workspace's clip upload endpoint."""
 
@@ -92,3 +98,28 @@ class TranscriptionRateLimitedError(AppError):
 
 class TranscriptionFailedError(AppError):
     status_code = 502
+
+
+class SummaryUnavailableError(AppError):
+    """The summarizer can't be used right now, for example its API key isn't set.
+    The message names what to fix."""
+
+    status_code = 503
+
+
+class SummaryRateLimitedError(AppError):
+    status_code = 429
+
+
+class SummaryTooLongError(AppError):
+    """The transcript doesn't fit in one request to the chosen model."""
+
+    status_code = 413
+
+
+class SummaryFailedError(AppError):
+    status_code = 502
+
+
+class NothingToSummarizeError(AppError):
+    status_code = 422
